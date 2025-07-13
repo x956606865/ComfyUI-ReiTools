@@ -20,7 +20,6 @@ function getUpstreamWidgetValue(node, inputName) {
 function updateSelectorOptions(node) {
   if (!node) return;
 
-  // 找到我们的下拉框控件 (它现在从一开始就是下拉框了)
   const dropdownWidget = node.widgets.find(
     (w) => w && w.name === 'selected_option'
   );
