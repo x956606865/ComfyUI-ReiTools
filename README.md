@@ -39,6 +39,8 @@
 - **输出**:
   - `text` (`STRING`): 所选 `.txt` 文件的文本内容。
 
+![ReiPromptFileSelector 节点截图](screenshot/screenshot2.png)
+
 ---
 
 ### Rei 下拉框选项 (`ReiSelectorOptionObject`) & Rei 自定义下拉框 (`ReiCustomSelector`)
@@ -110,6 +112,8 @@ graph TD
 4. 将**节点 B**的输出连接到`自定义下拉框`的 `option_2` 输入。
 5. 现在，`自定义下拉框`节点上会出现一个下拉菜单，包含 "科幻" 和 "奇幻" 两个选项。
 6. 当你选择 "科幻" 时，该节点会输出 "未来的城市，飞行汽车，机器人..."。你可以将这个输出连接到你的 Prompt 输入框中。
+
+![ReiCustomSelector 和 ReiSelectorOptionObject 节点组合使用截图](screenshot/screenshot1.png)
 
 ---
 
