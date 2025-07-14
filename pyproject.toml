@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-reitools"
+description = "natsurei tools"
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/x956606865/ComfyUI-ReiTools"
+
+[tool.comfy]
+PublisherId = "x956606865"
+DisplayName = "ComfyUI-ReiTools"
+Icon = "https://avatars.githubusercontent.com/u/10432052"

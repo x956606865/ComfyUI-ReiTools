@@ -10,10 +10,11 @@
    cd ComfyUI/custom_nodes/
    ```
 3. 克隆本仓库：
+
    ```bash
-   git clone https://github.com/your-username/ComfyUI-ReiTools.git
+   git clone https://github.com/x956606865/ComfyUI-ReiTools
    ```
-   > 请将 `your-username` 替换为实际的仓库地址。
+
 4. 重启 ComfyUI。
 
 ## 节点介绍
@@ -46,33 +47,6 @@
 ### Rei 下拉框选项 (`ReiSelectorOptionObject`) & Rei 自定义下拉框 (`ReiCustomSelector`)
 
 这两个节点需要配合使用，来创建一个动态的、可自定义选项的下拉选择框。你可以预设多组名值对（例如，不同的风格提示词、不同的模型配置参数等），然后在工作流中通过一个下拉框方便地切换。
-
-#### 工作流
-
-下面是这两个节点如何协同工作的示意图：
-
-```mermaid
-graph TD
-    subgraph "1. 定义选项"
-        direction LR
-        Option1(Rei 下拉框选项)
-        Option2(Rei 下拉框选项)
-        OptionN(...)
-    end
-
-    subgraph "2. 创建选择器"
-        Selector(Rei 自定义下拉框)
-    end
-
-    subgraph "3. 输出结果"
-        Output(文本/值)
-    end
-
-    Option1 -- "option_1" --> Selector
-    Option2 -- "option_2" --> Selector
-    OptionN -- "option_..." --> Selector
-    Selector -- "value" --> Output
-```
 
 #### 1. Rei 下拉框选项 (`ReiSelectorOptionObject`)
 
