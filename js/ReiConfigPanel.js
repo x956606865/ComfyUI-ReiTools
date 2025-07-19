@@ -59,8 +59,8 @@ class ReiConfigManager {
       const formData = new FormData();
       formData.append('key', key);
       formData.append('value', value);
-      // 将 token 类型转换为 string 发送给后端，但在前端保持 token 类型信息
-      formData.append('type', type === 'token' ? 'string' : type);
+      // 发送真实的类型信息给后端
+      formData.append('type', type);
 
       const response = await api.fetchApi('/api/rei/config/update', {
         method: 'POST',
@@ -268,7 +268,12 @@ class ReiConfigManager {
       this.configTypes[key] ||
       (this.isTokenType(key, value) ? 'token' : typeof value);
 
-    document.getElementById('rei-config-key').value = key;
+    // 设置键名并禁用键名输入框（编辑模式）
+    const keyInput = document.getElementById('rei-config-key');
+    keyInput.value = key;
+    keyInput.disabled = true; // 编辑模式下禁用键名修改
+    keyInput.style.opacity = '0.6'; // 视觉上表示禁用状态
+    keyInput.style.cursor = 'not-allowed';
 
     // 设置类型并禁用类型选择器（编辑模式）
     const typeSelect = document.getElementById('rei-config-type');
@@ -311,9 +316,24 @@ class ReiConfigManager {
     const form = document.getElementById('rei-config-form');
     if (form) {
       form.style.display = 'block';
+
+      // 自动滚动到编辑表单
+      setTimeout(() => {
+        form.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+      }, 100); // 稍微延迟以确保表单已显示
+
       const keyInput = document.getElementById('rei-config-key');
       if (keyInput) {
-        keyInput.focus();
+        // 延迟聚焦，避免与滚动冲突
+        setTimeout(() => {
+          if (!keyInput.disabled) {
+            keyInput.focus();
+          }
+        }, 200);
       }
       // 清除之前的验证提示
       const oldValidation = document.getElementById('rei-config-validation');
@@ -346,7 +366,13 @@ class ReiConfigManager {
   }
 
   clearForm() {
-    document.getElementById('rei-config-key').value = '';
+    // 重新启用键名输入框（新增模式）
+    const keyInput = document.getElementById('rei-config-key');
+    keyInput.value = '';
+    keyInput.disabled = false; // 新增模式下允许输入键名
+    keyInput.style.opacity = '1'; // 恢复正常透明度
+    keyInput.style.cursor = 'text';
+
     document.getElementById('rei-config-value').value = '';
 
     // 重新启用类型选择器（新增模式）

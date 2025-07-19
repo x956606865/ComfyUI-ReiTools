@@ -144,6 +144,12 @@
 3. 保存配置后，该节点的下拉列表会显示新创建的组合
 4. 选择组合后，节点会输出三个对应的配置值
 
+![三键组合加载器使用示例](screenshot/3keygroup-example.png)
+
+![配置管理器完整示例](screenshot/config-manager-complete.png)
+
+**使用示例**：如图所示，创建了名为 `glm配置组合` 的三键组合，将三个配置值批量传递给 GLM4 对话节点，实现了便捷的批量配置管理。
+
 ### Rei Prompt 文件选择器 (`ReiPromptFileSelector`)
 
 从指定文件夹中选择并加载文本文件内容。

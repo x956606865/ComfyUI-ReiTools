@@ -122,7 +122,10 @@ async def delete_config(request):
 def _convert_value(value, value_type):
     """转换值类型"""
     try:
-        if value_type == "string" or value_type == "token":
+        if value_type == "string":
+            return str(value)
+        elif value_type == "token":
+            # token 类型作为字符串存储，但保持类型信息
             return str(value)
         elif value_type == "3KeyGroup":
             # 3KeyGroup 类型保持为字符串（JSON格式）
@@ -150,8 +153,12 @@ def _save_config_type(key, config_type):
         
         with open(type_file_path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(type_data, indent=2, ensure_ascii=False))
+        
+        print(f"[ReiConfig] 成功保存类型信息: {key} = {config_type}")
     except Exception as e:
         print(f"[ReiConfig] 保存类型信息失败: {e}")
+        import traceback
+        traceback.print_exc()
 
 def _delete_config_type(key):
     """删除配置类型信息"""
