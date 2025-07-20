@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from aiohttp import web
 from server import PromptServer
 import folder_paths
@@ -10,10 +11,18 @@ routes = PromptServer.instance.routes
 
 @routes.get('/api/rei/config/get_all')
 async def get_all_configs(request):
-    """获取所有配置"""
+    """获取所有配置值"""
     try:
         configs = load_config()
-        return web.json_response(configs)
+        # 提取值用于前端显示
+        config_values = {}
+        for key, config_obj in configs.items():
+            if isinstance(config_obj, dict):
+                config_values[key] = config_obj.get("value", "")
+            else:
+                # 兼容旧格式
+                config_values[key] = config_obj
+        return web.json_response(config_values)
     except Exception as e:
         print(f"[ReiConfig] 获取配置失败: {e}")
         return web.json_response(
@@ -23,9 +32,22 @@ async def get_all_configs(request):
 
 @routes.get('/api/rei/config/get_types')
 async def get_config_types(request):
-    """获取所有配置类型信息"""
+    """获取所有配置类型信息（从配置对象中提取）"""
     try:
-        types = _load_config_types()
+        configs = load_config()
+        types = {}
+        for key, config_obj in configs.items():
+            if isinstance(config_obj, dict):
+                types[key] = {
+                    "type": config_obj.get("type", "string"),
+                    "encrypted": config_obj.get("encrypted", False)
+                }
+            else:
+                # 兼容旧格式
+                types[key] = {
+                    "type": "string",
+                    "encrypted": False
+                }
         return web.json_response(types)
     except Exception as e:
         print(f"[ReiConfig] 获取配置类型失败: {e}")
@@ -43,6 +65,7 @@ async def update_config(request):
         key = data.get('key', '').strip()
         value = data.get('value', '')
         value_type = data.get('type', 'string')
+        is_encrypted = data.get('encrypted', 'false') == 'true'
         
         if not key:
             return web.json_response(
@@ -58,13 +81,16 @@ async def update_config(request):
                 status=400
             )
         
-        # 保存配置
+        # 保存配置（新的对象结构）
         configs = load_config()
-        configs[key] = converted_value
+        configs[key] = {
+            "value": converted_value,
+            "type": value_type,
+            "encrypted": is_encrypted,
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
         save_config(configs)
-        
-        # 保存类型信息
-        _save_config_type(key, value_type)
         
         print(f"[ReiConfig] 成功更新配置: {key} = {converted_value}")
         return web.json_response({
@@ -103,9 +129,6 @@ async def delete_config(request):
         del configs[key]
         save_config(configs)
         
-        # 删除类型信息
-        _delete_config_type(key)
-        
         print(f"[ReiConfig] 成功删除配置: {key}")
         return web.json_response({
             "success": True,
@@ -139,52 +162,6 @@ def _convert_value(value, value_type):
     except (ValueError, AttributeError):
         return None
 
-def _save_config_type(key, config_type):
-    """保存配置类型信息"""
-    try:
-        type_file_path = os.path.join(folder_paths.base_path, "config_types.json")
-        try:
-            with open(type_file_path, 'r', encoding='utf-8') as f:
-                type_data = json.loads(f.read())
-        except:
-            type_data = {}
-        
-        type_data[key] = config_type
-        
-        with open(type_file_path, 'w', encoding='utf-8') as f:
-            f.write(json.dumps(type_data, indent=2, ensure_ascii=False))
-        
-        print(f"[ReiConfig] 成功保存类型信息: {key} = {config_type}")
-    except Exception as e:
-        print(f"[ReiConfig] 保存类型信息失败: {e}")
-        import traceback
-        traceback.print_exc()
 
-def _delete_config_type(key):
-    """删除配置类型信息"""
-    try:
-        type_file_path = os.path.join(folder_paths.base_path, "config_types.json")
-        try:
-            with open(type_file_path, 'r', encoding='utf-8') as f:
-                type_data = json.loads(f.read())
-            
-            if key in type_data:
-                del type_data[key]
-                
-                with open(type_file_path, 'w', encoding='utf-8') as f:
-                    f.write(json.dumps(type_data, indent=2, ensure_ascii=False))
-        except:
-            pass  # 文件不存在时忽略
-    except Exception as e:
-        print(f"[ReiConfig] 删除类型信息失败: {e}")
-
-def _load_config_types():
-    """加载配置类型信息"""
-    try:
-        type_file_path = os.path.join(folder_paths.base_path, "config_types.json")
-        with open(type_file_path, 'r', encoding='utf-8') as f:
-            return json.loads(f.read())
-    except:
-        return {}
 
 print("[ReiConfig] API 路由注册完成") 

@@ -8,6 +8,122 @@ class ReiConfigManager {
     this.currentEditingKey = null;
   }
 
+  // 加密功能
+  async encryptToken(text, password) {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const passwordData = encoder.encode(password);
+
+      // 使用密码生成密钥
+      const key = await crypto.subtle.importKey(
+        'raw',
+        passwordData,
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+
+      // 生成随机盐
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+
+      // 派生密钥
+      const derivedKey = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: 100000,
+          hash: 'SHA-256',
+        },
+        key,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt']
+      );
+
+      // 生成随机IV
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+
+      // 加密
+      const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        derivedKey,
+        data
+      );
+
+      // 组合盐、IV和加密数据
+      const result = new Uint8Array(
+        salt.length + iv.length + encrypted.byteLength
+      );
+      result.set(salt, 0);
+      result.set(iv, salt.length);
+      result.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+      // 转换为 base64
+      return btoa(String.fromCharCode(...result));
+    } catch (error) {
+      console.error('加密失败:', error);
+      throw new Error('Token 加密失败');
+    }
+  }
+
+  // 解密功能
+  async decryptToken(encryptedText, password) {
+    try {
+      const encoder = new TextEncoder();
+      const passwordData = encoder.encode(password);
+
+      // 从 base64 解码
+      const encryptedData = new Uint8Array(
+        atob(encryptedText)
+          .split('')
+          .map((char) => char.charCodeAt(0))
+      );
+
+      // 提取盐、IV和加密数据
+      const salt = encryptedData.slice(0, 16);
+      const iv = encryptedData.slice(16, 28);
+      const encrypted = encryptedData.slice(28);
+
+      // 使用密码生成密钥
+      const key = await crypto.subtle.importKey(
+        'raw',
+        passwordData,
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+
+      // 派生密钥
+      const derivedKey = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: 100000,
+          hash: 'SHA-256',
+        },
+        key,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['decrypt']
+      );
+
+      // 解密
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv },
+        derivedKey,
+        encrypted
+      );
+
+      // 转换为字符串
+      const decoder = new TextDecoder();
+      return decoder.decode(decrypted);
+    } catch (error) {
+      console.error('解密失败:', error);
+      throw new Error('Token 解密失败，请检查密码是否正确');
+    }
+  }
+
   async loadConfigs() {
     console.log('开始加载配置...');
     try {
@@ -56,11 +172,40 @@ class ReiConfigManager {
     console.log('保存配置:', { key, value, type });
 
     try {
+      let finalValue = value;
+      let isEncrypted = false;
+
+      // 检查是否需要加密 token
+      if (type === 'token') {
+        const encryptionEnabled = document.getElementById(
+          'rei-encryption-enabled'
+        ).checked;
+        const password = document.getElementById(
+          'rei-encryption-password'
+        ).value;
+
+        if (encryptionEnabled) {
+          if (!password) {
+            this.showMessage('启用加密时必须输入密码', 'error');
+            return false;
+          }
+
+          try {
+            finalValue = await this.encryptToken(value, password);
+            isEncrypted = true;
+            console.log('Token 已加密');
+          } catch (error) {
+            this.showMessage(`加密失败: ${error.message}`, 'error');
+            return false;
+          }
+        }
+      }
+
       const formData = new FormData();
       formData.append('key', key);
-      formData.append('value', value);
-      // 发送真实的类型信息给后端
+      formData.append('value', finalValue);
       formData.append('type', type);
+      formData.append('encrypted', isEncrypted ? 'true' : 'false');
 
       const response = await api.fetchApi('/api/rei/config/update', {
         method: 'POST',
@@ -77,15 +222,20 @@ class ReiConfigManager {
       }
 
       // 更新本地配置
-      let convertedValue = value;
-      if (type === 'integer') convertedValue = parseInt(value);
-      else if (type === 'float') convertedValue = parseFloat(value);
-      else if (type === 'boolean')
+      let convertedValue = finalValue; // 使用处理后的值（可能是加密后的）
+      if (type === 'integer' && !isEncrypted) convertedValue = parseInt(value);
+      else if (type === 'float' && !isEncrypted)
+        convertedValue = parseFloat(value);
+      else if (type === 'boolean' && !isEncrypted)
         convertedValue = value.toLowerCase() === 'true';
-      // token 类型保持为字符串
+      // token 类型和加密的值保持为字符串
 
       this.configs[key] = convertedValue;
-      this.configTypes[key] = type; // 保存类型信息
+      // 更新类型信息为新的对象格式
+      this.configTypes[key] = {
+        type: type,
+        encrypted: isEncrypted,
+      };
       this.renderConfigList();
       this.showMessage(`成功保存配置: ${key}`, 'success');
       return true;
@@ -124,10 +274,101 @@ class ReiConfigManager {
     }
   }
 
-  showMessage(message, type = 'info') {
-    // 在侧边栏顶部显示消息
+  showInlineError(configKey, message) {
+    // 在配置项附近显示浮动错误提示
+    const configItems = document.querySelectorAll('.rei-config-item');
+    let targetItem = null;
+
+    // 查找对应的配置项
+    for (const item of configItems) {
+      const keyElement = item.querySelector('div[style*="font-weight: bold"]');
+      if (keyElement && keyElement.textContent === configKey) {
+        targetItem = item;
+        break;
+      }
+    }
+
+    if (!targetItem) return;
+
+    // 移除该项的旧提示
+    const oldTooltip = targetItem.querySelector('.rei-inline-error');
+    if (oldTooltip) oldTooltip.remove();
+
+    // 创建浮动提示
+    const tooltip = document.createElement('div');
+    tooltip.className = 'rei-inline-error';
+    tooltip.textContent = message;
+    tooltip.style.cssText = `
+      position: absolute;
+      background: #f44336;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.3;
+      max-width: 250px;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: popInError 0.3s ease-out;
+      border: 1px solid #d32f2f;
+      top: 50%;
+      right: calc(100% + 10px);
+      transform: translateY(-50%);
+      white-space: normal;
+      word-wrap: break-word;
+    `;
+
+    // 添加小箭头
+    const arrow = document.createElement('div');
+    arrow.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: -6px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid #f44336;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+    `;
+    tooltip.appendChild(arrow);
+
+    // 设置配置项为相对定位
+    targetItem.style.position = 'relative';
+    targetItem.appendChild(tooltip);
+
+    // 高亮配置项
+    const originalBg = targetItem.style.background;
+    targetItem.style.background = '#5a1a1a';
+    targetItem.style.borderColor = '#f44336';
+    targetItem.style.transform = 'scale(1.02)';
+    targetItem.style.transition = 'all 0.3s ease';
+
+    // 3秒后移除提示和高亮
+    setTimeout(() => {
+      if (tooltip.parentNode) {
+        tooltip.style.animation = 'popOutError 0.3s ease-in';
+        targetItem.style.background = originalBg;
+        targetItem.style.borderColor = '#555';
+        targetItem.style.transform = 'scale(1)';
+
+        setTimeout(() => {
+          if (tooltip.parentNode) tooltip.remove();
+        }, 300);
+      }
+    }, 3000);
+  }
+
+  showMessage(message, type = 'info', scrollToTop = false) {
+    // 1. 在侧边栏顶部显示消息
     const container = document.getElementById('rei-config-container');
     if (!container) return;
+
+    // 移除旧的同类型消息，避免堆积
+    const oldMessages = container.querySelectorAll(
+      `.rei-config-message-${type}`
+    );
+    oldMessages.forEach((msg) => msg.remove());
 
     const messageEl = document.createElement('div');
     messageEl.className = `rei-config-message rei-config-message-${type}`;
@@ -137,19 +378,44 @@ class ReiConfigManager {
             margin-bottom: 10px;
             border-radius: 4px;
             font-size: 12px;
+            position: relative;
+            z-index: 1000;
+            animation: slideInMessage 0.3s ease-out;
             ${type === 'success' ? 'background: #4CAF50; color: white;' : ''}
-            ${type === 'error' ? 'background: #f44336; color: white;' : ''}
+            ${
+              type === 'error'
+                ? 'background: #f44336; color: white; box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);'
+                : ''
+            }
             ${type === 'info' ? 'background: #2196F3; color: white;' : ''}
         `;
 
     container.insertBefore(messageEl, container.firstChild);
 
-    // 3秒后自动移除消息
+    // 2. 如果是重要消息（错误），自动滚动到顶部并高亮显示
+    if (type === 'error' || scrollToTop) {
+      container.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+
+      // 高亮效果
+      messageEl.style.animation = 'pulseError 0.6s ease-in-out 3';
+    }
+
+    // 3. 显示时长根据消息类型调整
+    const duration = type === 'error' ? 5000 : 3000; // 错误消息显示更久
+
     setTimeout(() => {
       if (messageEl.parentNode) {
-        messageEl.parentNode.removeChild(messageEl);
+        messageEl.style.animation = 'slideOutMessage 0.3s ease-in';
+        setTimeout(() => {
+          if (messageEl.parentNode) {
+            messageEl.parentNode.removeChild(messageEl);
+          }
+        }, 300);
       }
-    }, 3000);
+    }, duration);
   }
 
   renderConfigList() {
@@ -165,10 +431,12 @@ class ReiConfigManager {
     let html = '';
     for (const [key, value] of Object.entries(this.configs)) {
       // 优先使用保存的类型信息，否则使用 JavaScript 类型推断
+      const typeInfo = this.configTypes[key];
       const configType =
-        this.configTypes[key] ||
+        typeInfo?.type ||
         (this.isTokenType(key, value) ? 'token' : typeof value);
       const isToken = configType === 'token';
+      const isEncrypted = typeInfo?.encrypted || false;
       let displayValue;
 
       if (isToken) {
@@ -206,7 +474,9 @@ class ReiConfigManager {
                                                          <div style="font-weight: bold; color: #4CAF50; font-size: 13px; margin-bottom: 6px; word-break: break-all;">${key}</div>
                              <div style="color: #bbb; font-size: 11px; margin-bottom: 4px;">类型: ${this.getDisplayTypeName(
                                configType
-                             )}${isToken ? ' 🔒' : ''}</div>
+                             )}${
+        isToken ? (isEncrypted ? ' 🔐' : ' 🔒') : ''
+      }</div>
                              <div style="color: #ddd; font-size: 12px; word-break: break-all; line-height: 1.3;">${displayValue}</div>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px; margin-left: 12px;">
@@ -263,11 +533,54 @@ class ReiConfigManager {
 
   editConfig(key) {
     const value = this.configs[key];
-    // 优先使用保存的类型信息，否则使用 JavaScript 类型
+    // 优先使用保存的类型信息，否则使用 JavaScript 类型推断
+    const typeInfo = this.configTypes[key];
     const type =
-      this.configTypes[key] ||
-      (this.isTokenType(key, value) ? 'token' : typeof value);
+      typeInfo?.type || (this.isTokenType(key, value) ? 'token' : typeof value);
+    const isEncrypted = typeInfo?.encrypted || false;
 
+    // 检查加密配置项的编辑权限
+    if (isEncrypted) {
+      const encryptionEnabled = document.getElementById(
+        'rei-encryption-enabled'
+      ).checked;
+      const password = document.getElementById('rei-encryption-password').value;
+
+      if (!encryptionEnabled || !password) {
+        // 显示就近提示和顶部消息
+        this.showInlineError(key, '⚠️ 请先启用加密并输入密码才能编辑此配置项');
+        this.showMessage(
+          '⚠️ 无法编辑加密配置项：请先启用加密并输入密码',
+          'error',
+          true
+        );
+        return;
+      }
+    }
+
+    // 对于加密的配置项，需要先验证解密是否成功
+    if (isEncrypted && type === 'token') {
+      const password = document.getElementById('rei-encryption-password').value;
+      this.decryptToken(String(value), password)
+        .then((decryptedValue) => {
+          // 解密成功，继续显示编辑表单
+          this.proceedWithEdit(key, type, value, decryptedValue);
+        })
+        .catch((error) => {
+          console.error('解密失败:', error);
+          // 显示就近提示和顶部消息
+          this.showInlineError(key, '⚠️ 密码错误，无法解密此配置项');
+          this.showMessage('⚠️ 解密失败，请检查密码是否正确', 'error', true);
+          // 解密失败时不显示编辑表单
+          return;
+        });
+    } else {
+      // 非加密配置项直接显示编辑表单
+      this.proceedWithEdit(key, type, value, value);
+    }
+  }
+
+  proceedWithEdit(key, type, originalValue, displayValue) {
     // 设置键名并禁用键名输入框（编辑模式）
     const keyInput = document.getElementById('rei-config-key');
     keyInput.value = key;
@@ -285,7 +598,7 @@ class ReiConfigManager {
     if (type === '3KeyGroup') {
       // 解析3KeyGroup数据
       try {
-        const keyGroup = JSON.parse(String(value));
+        const keyGroup = JSON.parse(String(originalValue));
         setTimeout(() => {
           document.getElementById('rei-config-key1').value =
             keyGroup.key1 || '';
@@ -298,7 +611,7 @@ class ReiConfigManager {
         console.error('解析3KeyGroup数据失败:', e);
       }
     } else {
-      document.getElementById('rei-config-value').value = String(value);
+      document.getElementById('rei-config-value').value = String(displayValue);
     }
 
     this.currentEditingKey = key;
@@ -432,7 +745,8 @@ class ReiConfigManager {
 
   isTokenType(key, value) {
     // 检查是否在类型存储中标记为 token
-    if (this.configTypes[key] === 'token') {
+    const typeInfo = this.configTypes[key];
+    if (typeInfo?.type === 'token') {
       return true;
     }
 
@@ -471,10 +785,35 @@ class ReiConfigManager {
     try {
       const value = this.configs[key];
       const configType = this.configTypes[key];
+      const isEncrypted = configType?.encrypted || false;
+
+      // 检查加密配置项的复制权限
+      if (isEncrypted) {
+        const encryptionEnabled = document.getElementById(
+          'rei-encryption-enabled'
+        ).checked;
+        const password = document.getElementById(
+          'rei-encryption-password'
+        ).value;
+
+        if (!encryptionEnabled || !password) {
+          // 显示就近提示和顶部消息
+          this.showInlineError(
+            key,
+            '⚠️ 请先启用加密并输入密码才能复制此配置项'
+          );
+          this.showMessage(
+            '⚠️ 无法复制加密配置项：请先启用加密并输入密码',
+            'error',
+            true
+          );
+          return;
+        }
+      }
 
       let copyValue;
 
-      if (configType === '3KeyGroup') {
+      if (configType?.type === '3KeyGroup') {
         // 对于 3KeyGroup，复制格式化的键值对信息
         try {
           const keyGroup = JSON.parse(String(value));
@@ -499,6 +838,18 @@ class ReiConfigManager {
           copyValue = keyValues.join('\n');
         } catch (e) {
           copyValue = String(value);
+        }
+      } else if (isEncrypted && configType?.type === 'token') {
+        // 对于加密的 token，解密后复制
+        const password = document.getElementById(
+          'rei-encryption-password'
+        ).value;
+        try {
+          copyValue = await this.decryptToken(String(value), password);
+        } catch (error) {
+          console.error('解密失败:', error);
+          this.showMessage('⚠️ 解密失败，请检查密码是否正确', 'error');
+          return;
         }
       } else {
         // 其他类型直接复制原值
@@ -624,8 +975,10 @@ class ReiConfigManager {
       console.log('绑定验证事件');
 
       // 移除之前的事件监听器（如果存在）
+      const currentTypeValue = typeSelect.value; // 保存当前类型值
       const newValueInput = valueInput.cloneNode(true);
       const newTypeSelect = typeSelect.cloneNode(true);
+      newTypeSelect.value = currentTypeValue; // 恢复类型值
       valueInput.parentNode.replaceChild(newValueInput, valueInput);
       typeSelect.parentNode.replaceChild(newTypeSelect, typeSelect);
 
@@ -799,9 +1152,71 @@ class ReiConfigManager {
             box-sizing: border-box;
         `;
 
+    // 添加动画样式
+    if (!document.getElementById('rei-config-animations')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'rei-config-animations';
+      styleEl.textContent = `
+        @keyframes slideInMessage {
+          from { transform: translateY(-20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideOutMessage {
+          from { transform: translateY(0); opacity: 1; }
+          to { transform: translateY(-20px); opacity: 0; }
+        }
+        @keyframes pulseError {
+          0% { transform: scale(1); box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3); }
+          50% { transform: scale(1.02); box-shadow: 0 4px 16px rgba(244, 67, 54, 0.6); }
+          100% { transform: scale(1); box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3); }
+        }
+        @keyframes popInError {
+          0% { transform: translateY(-50%) scale(0.8); opacity: 0; }
+          50% { transform: translateY(-50%) scale(1.05); opacity: 0.9; }
+          100% { transform: translateY(-50%) scale(1); opacity: 1; }
+        }
+        @keyframes popOutError {
+          0% { transform: translateY(-50%) scale(1); opacity: 1; }
+          100% { transform: translateY(-50%) scale(0.8); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(styleEl);
+    }
+
     container.innerHTML = `
             <div style="margin-bottom: 16px;">
                 <h3 style="margin: 0 0 12px 0; color: #fff; font-size: 16px;">配置管理器</h3>
+                
+                <!-- 加密设置 -->
+                <div style="
+                    background: #333;
+                    border: 1px solid #555;
+                    border-radius: 6px;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                ">
+                    <h4 style="margin: 0 0 8px 0; color: #4CAF50; font-size: 13px;">🔐 Token 加密设置</h4>
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <input type="checkbox" id="rei-encryption-enabled" style="margin-right: 8px;">
+                        <label for="rei-encryption-enabled" style="color: #ccc; font-size: 12px;">启用 Token 加密存储</label>
+                    </div>
+                    <div id="rei-encryption-password-section" style="display: none;">
+                        <label style="display: block; margin-bottom: 4px; color: #ccc; font-size: 11px;">加密密码:</label>
+                        <input type="password" id="rei-encryption-password" placeholder="请输入加密密码" style="
+                            width: 100%;
+                            padding: 6px;
+                            border: 1px solid #666;
+                            background: #444;
+                            color: white;
+                            border-radius: 4px;
+                            font-size: 12px;
+                            box-sizing: border-box;
+                        ">
+                        <div style="color: #999; font-size: 10px; margin-top: 4px;">
+                            ⚠️ 请牢记此密码，丢失后无法恢复加密的 Token
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- 重要提醒 -->
                 <div style="
@@ -1039,6 +1454,25 @@ class ReiConfigManager {
         };
       } else {
         console.error('找不到取消按钮');
+      }
+
+      // 绑定加密设置事件
+      const encryptionCheckbox = document.getElementById(
+        'rei-encryption-enabled'
+      );
+      const passwordSection = document.getElementById(
+        'rei-encryption-password-section'
+      );
+
+      if (encryptionCheckbox && passwordSection) {
+        encryptionCheckbox.onchange = () => {
+          if (encryptionCheckbox.checked) {
+            passwordSection.style.display = 'block';
+          } else {
+            passwordSection.style.display = 'none';
+            document.getElementById('rei-encryption-password').value = '';
+          }
+        };
       }
 
       // 初始加载配置
