@@ -4,7 +4,16 @@
 
 ## 🆕 最近更新
 
-### v1.3.0 (最新) - 🔐 加密存储与安全增强
+### v1.4.0 (最新) - 🖼️ 图片元数据处理
+
+- ✨ **新增图片元数据加载器（测试）**：`ReiImageMetadataLoader` 支持从 AI 生成图片中提取 prompt 和参数
+- 🎯 **两种元数据格式支持**：普通 WebUI 格式、Civitai 元数据 格式
+- 📊 **智能参数解析**：自动识别并结构化输出各种生成参数
+- 🔍 **强大的兼容性**：支持 PNG、JPG、JPEG、WebP 等多种图片格式
+- 🛠️ **专业解析工具**：`ReiMetadataParser` 节点专门处理 WebUI 格式参数文本
+- 🎨 **逆向工程能力**：从现有 AI 图片中提取参数重现生成效果
+
+### v1.3.0 - 🔐 加密存储与安全增强
 
 - ✨ **新增 Token 加密存储功能**：支持使用密码对敏感配置进行对称加密
 - 🔑 **配置读取器密码支持**：读取加密配置时可输入密码自动解密
@@ -49,6 +58,8 @@
   - [Rei 三键组合加载器](#rei-三键组合加载器-rei3keygrouploader)
   - [Rei Prompt 文件选择器](#rei-prompt-文件选择器-reipromptfileselector)
   - [Rei 自定义下拉框组合](#rei-自定义下拉框组合)
+  - [Rei 图片元数据加载器](#rei-图片元数据加载器-reiimageMetadataloader)
+  - [Rei 元数据解析器](#rei-元数据解析器-reimetadataparser)
 - [截图演示](#-截图演示)
 
 ---
@@ -306,6 +317,87 @@
 2. 将这些选项连接到"Rei 自定义下拉框"节点
 3. 在下拉框中选择需要的选项
 4. 获取对应的输出值用于后续处理
+
+---
+
+### Rei 图片元数据加载器 (ReiImageMetadataLoader)
+
+一个强大的图片元数据提取节点，支持从 AI 生成的图片中提取 prompt、参数和 workflow 信息。
+
+**备注**
+该功能具有很强的不确定性，因为很多网站或者生成工具会删除生成图片时的附带元数据，无法读取。不同的生图工具，附带的格式也具有一定的差异。目前我测试了的只有原生 webui 生成的图片、c 站下载的 comfyui 图片和 webui 图片，只要没有被删掉元数据，基本能正常读取
+
+**Todo**
+对于 C 站的图片，元数据里还附带了模型信息以及 lora 信息，考虑全部提取出来，可以自动跳转 c 站或者自动下载（未做）
+
+**功能特性**：
+
+- 🖼️ **多格式支持**：支持 PNG、JPG、JPEG、WebP 格式图片
+- 🎯 **四种元数据格式**：
+  - 普通 WebUI PNG 参数格式
+  - 普通 ComfyUI PNG workflow 格式
+  - Civitai ComfyUI JSON 格式（从 EXIF/UserComment 提取）
+  - Civitai WebUI UNICODE 格式（从 EXIF 提取）
+- 🔍 **智能检测**：自动识别图片中的元数据类型和格式
+- 📊 **结构化输出**：将提取的参数转换为结构化的 JSON 对象
+
+**输入**：
+
+- `image`: 图片文件选择器
+
+**输出**：
+
+- `image` (`IMAGE`): 加载的图片张量
+- `positive_prompt` (`STRING`): 正向提示词
+- `negative_prompt` (`STRING`): 负向提示词
+- `parameters` (`STRING`): 原始参数文本
+- `workflow` (`STRING`): 工作流 JSON（如果存在）
+- `raw_metadata` (`STRING`): 原始元数据信息
+- `parsed_params` (`STRING`): 解析后的结构化参数 JSON
+
+**使用场景**：
+
+1. **逆向工程 AI 图片**：从现有 AI 生成图片中提取参数重现效果
+2. **工作流分析**：分析和学习其他人的 ComfyUI 工作流
+3. **批量处理**：提取大量图片的生成参数进行分析
+4. **参数复用**：将提取的参数应用到新的生成任务中
+
+---
+
+### Rei 元数据解析器 (ReiMetadataParser)
+
+专门用于解析 WebUI 格式参数文本的节点，将参数字符串转换为结构化的参数对象。
+
+**功能特性**：
+
+- 📝 **WebUI 参数解析**：支持解析标准的 WebUI 参数格式
+- 🔧 **智能参数提取**：自动识别和提取各种生成参数
+- 📊 **结构化输出**：输出标准的 JSON 格式参数对象
+- 🛠️ **错误处理**：对无效或不完整的参数进行容错处理
+
+**输入**：
+
+- `parameters_text` (`STRING`): WebUI 格式的参数文本
+
+**输出**：
+
+- `parsed_params` (`STRING`): 解析后的结构化参数 JSON
+- `positive_prompt` (`STRING`): 提取的正向提示词
+- `negative_prompt` (`STRING`): 提取的负向提示词
+
+**支持的参数**：
+
+- 基本参数：`steps`、`cfg_scale`、`seed`、`width`、`height`
+- 采样器：`sampler`、`scheduler`
+- 模型信息：`model`、`vae`
+- 高级参数：`denoising_strength`、`clip_skip` 等
+
+**使用场景**：
+
+1. **参数标准化**：将文本格式的参数转换为 JSON 结构
+2. **工作流集成**：将解析的参数用于自动化工作流
+3. **批量分析**：处理大量 WebUI 格式的参数文本
+4. **参数验证**：检查和验证参数的完整性
 
 ---
 
