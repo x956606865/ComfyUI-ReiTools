@@ -43,24 +43,24 @@ function updateSelectorOptions(node) {
       }
     }
   }
+  // return;
+  // // 动态添加或移除输入槽位
+  // const targetInputCount = Math.min(lastConnectedIndex + 1, MAX_OPTIONS);
+  // const currentInputs = (node.inputs || []).filter(
+  //   (i) => i && i.name.startsWith('option_')
+  // );
+  // const currentInputCount = currentInputs.length;
 
-  // 动态添加或移除输入槽位
-  const targetInputCount = Math.min(lastConnectedIndex + 1, MAX_OPTIONS);
-  const currentInputs = (node.inputs || []).filter(
-    (i) => i && i.name.startsWith('option_')
-  );
-  const currentInputCount = currentInputs.length;
-
-  if (currentInputCount > targetInputCount) {
-    for (let i = currentInputCount; i > targetInputCount; i--) {
-      const slotIndex = node.findInputSlot(`option_${i}`);
-      if (slotIndex !== -1) node.removeInput(slotIndex);
-    }
-  } else if (currentInputCount < targetInputCount) {
-    for (let i = currentInputCount + 1; i <= targetInputCount; i++) {
-      node.addInput(`option_${i}`, 'REI_SELECTOR_OPTION_OBJECT');
-    }
-  }
+  // if (currentInputCount > targetInputCount) {
+  //   for (let i = currentInputCount; i > targetInputCount; i--) {
+  //     const slotIndex = node.findInputSlot(`option_${i}`);
+  //     if (slotIndex !== -1) node.removeInput(slotIndex);
+  //   }
+  // } else if (currentInputCount < targetInputCount) {
+  //   for (let i = currentInputCount + 1; i <= targetInputCount; i++) {
+  //     node.addInput(`option_${i}`, 'REI_SELECTOR_OPTION_OBJECT');
+  //   }
+  // }
 
   // 更新下拉框的选项列表
   const currentSelectedValue = dropdownWidget.value;

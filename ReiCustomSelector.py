@@ -9,6 +9,15 @@ class ReiCustomSelector:
             },
             "optional": {
                 "option_1": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_2": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_3": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_4": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_5": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_6": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_7": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_8": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_9": ("REI_SELECTOR_OPTION_OBJECT",),
+                "option_10": ("REI_SELECTOR_OPTION_OBJECT",),
             }
         }
     @classmethod
