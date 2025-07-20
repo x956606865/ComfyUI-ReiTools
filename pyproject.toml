@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-reitools"
 description = "natsurei tools"
-version = "1.0.1"
+version = "1.3.0"
 license = {file = "LICENSE"}
 dependencies = []
 
