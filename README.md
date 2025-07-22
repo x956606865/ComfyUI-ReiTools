@@ -4,11 +4,22 @@
 
 ## 🆕 最近更新
 
-### v1.4.1 (最新) - bug 修复
+<details open>
+<summary><strong>v1.4.2 (最新)</strong></summary>
+
+新增 v2 版本自定义下拉框组件，参考 kj 大佬写法，现在不用远距离连线了
+
+</details>
+
+<details>
+<summary><strong>v1.4.1 - bug 修复</strong></summary>
 
 - 自定义下拉框的节点的动态输入会导致该节点无法被复制，故暂时修改为固定最大 10 个 option
 
-### v1.4.0 - 🖼️ 图片元数据处理
+</details>
+
+<details>
+<summary><strong>v1.4.0 - 🖼️ 图片元数据处理</strong></summary>
 
 - ✨ **新增图片元数据加载器（测试）**：`ReiImageMetadataLoader` 支持从 AI 生成图片中提取 prompt 和参数
 - 🎯 **两种元数据格式支持**：普通 WebUI 格式、Civitai 元数据 格式
@@ -17,7 +28,10 @@
 - 🛠️ **专业解析工具**：`ReiMetadataParser` 节点专门处理 WebUI 格式参数文本
 - 🎨 **逆向工程能力**：从现有 AI 图片中提取参数重现生成效果
 
-### v1.3.0 - 🔐 加密存储与安全增强
+</details>
+
+<details>
+<summary><strong>v1.3.0 - 🔐 加密存储与安全增强</strong></summary>
 
 - ✨ **新增 Token 加密存储功能**：支持使用密码对敏感配置进行对称加密
 - 🔑 **配置读取器密码支持**：读取加密配置时可输入密码自动解密
@@ -26,26 +40,37 @@
 - 🛡️ **安全体验优化**：就近错误提示、自动滚动、密码错误拦截等
 - 🔧 **Bug 修复**：修复类型显示错误、3KeyGroup 下拉列表等问题
 
-### v1.2.0 - 📋 用户体验优化
+</details>
+
+<details>
+<summary><strong>v1.2.0 - 📋 用户体验优化</strong></summary>
 
 - 📋 **一键复制功能**：为每个配置项添加复制到剪贴板按钮
 - 🎛️ **编辑体验改进**：编辑时禁用键名和类型修改，增加自动滚动
 - ⚡ **实时验证增强**：改进输入验证和错误提示机制
 - 🎨 **界面优化**：更好的视觉反馈和用户引导
 
-### v1.1.0 - 🔗 三键组合功能
+</details>
+
+<details>
+<summary><strong>v1.1.0 - 🔗 三键组合功能</strong></summary>
 
 - 🔗 **三键组合类型**：支持将最多三个配置键组合管理
 - 📦 **批量加载节点**：`Rei3KeyGroupLoader` 节点一次性获取三个配置值
 - 🎯 **智能选择器**：配置管理器中的键选择下拉框，支持重复检查
 
-### v1.0.0 - 🚀 核心功能发布
+</details>
+
+<details>
+<summary><strong>v1.0.0 - 🚀 核心功能发布</strong></summary>
 
 - ⚙️ **配置管理器**：可视化侧边栏配置管理界面
 - 📝 **多类型支持**：字符串、整数、浮点数、布尔值、令牌/密钥
 - 🔍 **配置读取器**：`ReiConfigLoader` 节点动态读取配置
 - 📁 **文件选择器**：`ReiPromptFileSelector` 节点选择文本文件
 - 🎛️ **自定义下拉框**：动态选项的下拉框组合节点
+
+</details>
 
 ## 📖 目录
 
@@ -62,9 +87,18 @@
   - [Rei 三键组合加载器](#rei-三键组合加载器-rei3keygrouploader)
   - [Rei Prompt 文件选择器](#rei-prompt-文件选择器-reipromptfileselector)
   - [Rei 自定义下拉框组合](#rei-自定义下拉框组合)
-  - [Rei 图片元数据加载器](#rei-图片元数据加载器-reiimageMetadataloader)
-  - [Rei 元数据解析器](#rei-元数据解析器-reimetadataparser)
-- [截图演示](#-截图演示)
+    - [Rei 下拉框选项 V2 (ReiCustomSelectorOptionV2)](#rei-下拉框选项-v2-reicustomselectoroptionv2)
+    - [Rei 自定义下拉框 V2 (ReiCustomSelectorV2)](#rei-自定义下拉框-v2-reicustomselectorv2)
+    - [Rei 下拉框选项 (ReiSelectorOptionObject)](#rei-下拉框选项-reiselectoroptionobject)
+    - [Rei 自定义下拉框 (ReiCustomSelector)](#rei-自定义下拉框-reicustomselector)
+  - [Rei 图片元数据加载器 (ReiImageMetadataLoader)](#rei-图片元数据加载器-reiimageMetadataloader)
+  - [Rei 元数据解析器 (ReiMetadataParser)](#rei-元数据解析器-reimetadataparser)
+- [📸 截图演示](#-截图演示)
+  - [配置管理器界面](#配置管理器界面)
+  - [Prompt 文件选择器](#prompt-文件选择器)
+  - [自定义下拉框组合](#自定义下拉框组合-1)
+- [🤝 贡献](#-贡献)
+- [📄 许可证](#-许可证)
 
 ---
 
@@ -291,9 +325,9 @@
 
 由两个协作节点组成的动态下拉选择系统：
 
-#### Rei 下拉框选项 (`ReiSelectorOptionObject`)
+#### Rei 下拉框选项 V2 (`ReiCustomSelectorOptionV2`)
 
-定义下拉框选项的名称和值。
+定义下拉框选项的名称和值以及 group。
 
 - **输入**：
 
@@ -302,6 +336,33 @@
 
 - **输出**：
   - `rei_selector_option_object`: 选项对象
+
+#### Rei 自定义下拉框 V2 (`ReiCustomSelectorV2`)
+
+生成动态下拉选择框
+
+![自定义下拉框 V2界面截图](screenshot/customSelectorV2.png)
+
+- **输入**：
+
+  - `Group`: 在自定义选项里设置的分组
+  - `Name`: 动态生成的下拉选择框
+
+- **输出**：
+  - `value` (`STRING`): 选中选项的对应值
+
+#### Rei 下拉框选项 (`ReiSelectorOptionObject`)
+
+定义下拉框选项的名称和值。
+
+- **输入**：
+
+  - `group` (`STRING`): 给选项设置一个分组
+  - `name` (`STRING`): 选项显示名称
+  - `文本输入` (`STRING`): 选项对应的值
+
+- **输出**：
+  - 无
 
 #### Rei 自定义下拉框 (`ReiCustomSelector`)
 

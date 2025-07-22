@@ -1,10 +1,13 @@
-
+import json
 class ReiSelectorOptionObject:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "name": ("STRING", {
+                    "default": ''
+                }),
+                "group": ("STRING", {
                     "default": ''
                 }),
                 "value": ("STRING", {
@@ -29,5 +32,5 @@ class ReiSelectorOptionObject:
         self.value = ""
         
    
-    def process(self, name: str, value: str) -> tuple:
-        return ((name,value),)
+    def process(self, name: str, group: str, value: str) -> tuple:
+        return (json.dumps({"name":name,"group":group,"value":value}),)

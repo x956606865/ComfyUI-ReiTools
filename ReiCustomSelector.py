@@ -1,4 +1,4 @@
-
+import json
 
 class ReiCustomSelector:
     @classmethod
@@ -40,27 +40,22 @@ class ReiCustomSelector:
 
     def process(self, selected_option: str, **kwargs) -> tuple:
         option_list = []
-        for i in range(1, 21): 
-            key = f"option_{i}"
-            if key in kwargs and kwargs[key] is not None:
-                option_data = kwargs[key]
-                if isinstance(option_data, tuple) and len(option_data) == 2:
-                    option_list.append(option_data)
+        target_option = None
+       
         
+        # 遍历kwargs找到匹配的选项
+        for value in kwargs.values():
+            if value is not None:
+                try:
+                    option = json.loads(value)
+                    if option["name"] == selected_option:
+                        target_option = option["value"]
+                        break
+                except:
+                    continue
+                    
+        if target_option:
+            return (target_option,)
+        return ("",)
         
-        valid_options = []
-
-        for item in option_list:
-            if isinstance(item, tuple) and len(item) == 2:
-                name, value = item
-                valid_options.append({"name": name, "value": value})
-                print(f"Received option: Name='{name}', Value='{value}'")
-            else:
-                print(f"Warning: Received an incompatible item in option_list: {item}")
-        
-        
-        
-        
-        final_result = next((item["value"] for item in valid_options if item["name"] == selected_option), "")
-        return (final_result,)
         
