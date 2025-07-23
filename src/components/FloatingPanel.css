@@ -1,0 +1,98 @@
+.floating-panel {
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+}
+
+.floating-panel-header {
+  background: #333333;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: move;
+  border-bottom: 1px solid #404040;
+}
+
+.floating-panel-title {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.floating-panel-close {
+  background: none;
+  border: none;
+  color: #999999;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.floating-panel-close:hover {
+  background: #555555;
+  color: #ffffff;
+}
+
+.floating-panel-content {
+  padding: 16px;
+  height: calc(100% - 41px);
+  overflow: auto;
+  color: #ffffff;
+}
+
+.floating-panel-resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background: linear-gradient(
+    -45deg,
+    transparent 40%,
+    #666666 40%,
+    #666666 60%,
+    transparent 60%
+  );
+}
+
+.floating-panel-resize-handle:hover {
+  background: linear-gradient(
+    -45deg,
+    transparent 40%,
+    #888888 40%,
+    #888888 60%,
+    transparent 60%
+  );
+}
+
+/* 滚动条样式 */
+.floating-panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.floating-panel-content::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.floating-panel-content::-webkit-scrollbar-thumb {
+  background: #555555;
+  border-radius: 3px;
+}
+
+.floating-panel-content::-webkit-scrollbar-thumb:hover {
+  background: #666666;
+} 

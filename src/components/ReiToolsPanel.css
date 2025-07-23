@@ -1,0 +1,594 @@
+.reitools-panel {
+  font-size: 13px;
+}
+
+.reitools-tabs {
+  display: flex;
+  border-bottom: 1px solid #404040;
+  margin-bottom: 16px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: #999999;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: #ffffff;
+  background: #333333;
+}
+
+.tab.active {
+  color: #ffffff;
+  border-bottom-color: #007acc;
+}
+
+.reitools-content {
+  height: calc(100% - 40px);
+  overflow-y: auto;
+}
+
+.tools-section h3,
+.config-section h3,
+.info-section h3 {
+  color: #ffffff;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.tool-group {
+  margin-bottom: 20px;
+}
+
+.tool-button {
+  display: block;
+  width: 100%;
+  background: #333333;
+  border: 1px solid #404040;
+  color: #ffffff;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.tool-button:hover {
+  background: #404040;
+  border-color: #555555;
+}
+
+.tool-button:active {
+  background: #2a2a2a;
+}
+
+.config-group {
+  margin-bottom: 20px;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: #cccccc;
+  cursor: pointer;
+}
+
+.config-item input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.config-item input[type="range"] {
+  width: 100px;
+}
+
+.config-item select {
+  background: #333333;
+  border: 1px solid #404040;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.info-section p {
+  color: #cccccc;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.info-section ul {
+  color: #cccccc;
+  padding-left: 20px;
+  margin: 12px 0;
+}
+
+.info-section li {
+  margin-bottom: 4px;
+}
+
+.links {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #404040;
+}
+
+.links a {
+  color: #007acc;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+/* 参数聚焦相关样式 */
+.param-focus-section {
+  padding: 0;
+}
+
+/* 按钮组样式 */
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+/* 刷新按钮样式 */
+.refresh-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  max-width: 160px;
+  background: linear-gradient(135deg, #007acc 0%, #0099ff 100%);
+  border: none;
+  color: #ffffff;
+  padding: 8px 14px;
+  margin: 0;
+  border-radius: 4px;
+  flex: 1;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 1px 4px rgba(0, 122, 204, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.refresh-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.refresh-button:hover {
+  background: linear-gradient(135deg, #0066aa 0%, #0088dd 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 16px rgba(0, 122, 204, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.refresh-button:hover::before {
+  left: 100%;
+}
+
+.refresh-button:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 4px rgba(0, 122, 204, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.refresh-icon {
+  font-size: 14px;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.refresh-button:hover .refresh-icon {
+  transform: rotate(180deg);
+}
+
+.refresh-button:active .refresh-icon {
+  transform: rotate(360deg);
+}
+
+/* 运行按钮样式 */
+.run-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  max-width: 120px;
+  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+  border: none;
+  color: #ffffff;
+  padding: 8px 14px;
+  margin: 0;
+  border-radius: 4px;
+  flex: 1;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 1px 4px rgba(40, 167, 69, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.run-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.run-button:hover {
+  background: linear-gradient(135deg, #218838 0%, #28a745 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 16px rgba(40, 167, 69, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.run-button:hover::before {
+  left: 100%;
+}
+
+.run-button:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 4px rgba(40, 167, 69, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.run-icon {
+  font-size: 14px;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.run-button:hover .run-icon {
+  transform: scale(1.2);
+}
+
+.run-button:active .run-icon {
+  transform: scale(0.9);
+}
+
+.params-list {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+/* 移除容器查询，完全使用JavaScript控制 */
+
+/* JavaScript控制的宽布局样式 */
+.params-list.wide-layout {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* 宽布局下的参数项调整 */
+.params-list.wide-layout .param-item {
+  padding: 10px;
+}
+
+.params-list.wide-layout .param-text-input,
+.params-list.wide-layout .param-number-input,
+.params-list.wide-layout .param-select {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.params-list.wide-layout .param-input {
+  font-size: 12px;
+  padding: 6px 10px;
+  rows: 2;
+}
+
+.param-item {
+  background: #333333;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 0; /* 移除margin，使用grid gap */
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  user-select: none;
+  min-height: fit-content;
+}
+
+.param-item:active {
+  cursor: grabbing;
+}
+
+/* 移除pointer-events限制，通过JS逻辑控制拖拽 */
+
+.param-item:hover {
+  border-color: #555555;
+  background: #383838;
+}
+
+/* 拖拽状态样式 */
+.param-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.param-item.drag-over {
+  border-color: #007acc;
+  background: #404040;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 122, 204, 0.3);
+}
+
+/* 拖拽手柄样式 */
+.rei-drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #666666;
+  font-size: 16px;
+  line-height: 1;
+  cursor: grab;
+  padding: 4px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.rei-drag-handle:hover {
+  color: #999999;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.param-item:active .rei-drag-handle {
+  cursor: grabbing;
+}
+
+/* 拖拽提示样式 */
+.params-list {
+  position: relative;
+}
+
+.param-item::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #007acc;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.param-item.drag-over::before {
+  opacity: 1;
+}
+
+.param-input {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 8px 10px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.4;
+}
+
+.param-input:focus {
+  outline: none;
+  background: #333333;
+  border-color: #007acc;
+}
+
+.param-input:hover {
+  border-color: #555555;
+}
+
+.param-input::placeholder {
+  color: #999999;
+  font-style: normal;
+}
+
+/* 单行文本输入框样式 */
+.param-text-input {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 8px 12px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  height: 36px;
+}
+
+.param-text-input:focus {
+  outline: none;
+  background: #333333;
+  border-color: #007acc;
+}
+
+.param-text-input:hover {
+  border-color: #555555;
+}
+
+.param-text-input::placeholder {
+  color: #999999;
+  font-style: normal;
+}
+
+/* 数字输入框样式 */
+.param-number-input {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 8px 12px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  text-align: right;
+}
+
+.param-number-input:focus {
+  outline: none;
+  background: #333333;
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.param-number-input:hover {
+  border-color: #555555;
+}
+
+/* 隐藏数字输入框的默认箭头 */
+.param-number-input::-webkit-outer-spin-button,
+.param-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.param-number-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* 数字输入框的聚焦状态特效 */
+.param-number-input:focus {
+  background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+  color: #00d4ff;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+/* 下拉选择框样式 */
+.param-select {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 8px 12px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  cursor: pointer;
+  /* 简化的下拉箭头样式 */
+  background: #2a2a2a url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23999999' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.param-select:focus {
+  outline: none;
+  background: #333333 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23007acc' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.param-select:hover {
+  border-color: #555555;
+  background: #2a2a2a url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23cccccc' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+/* 下拉选项样式 */
+.param-select option {
+  background: #2a2a2a;
+  color: #ffffff;
+  padding: 8px 12px;
+  border: none;
+}
+
+.param-select option:hover,
+.param-select option:checked {
+  background: #007acc;
+  color: #ffffff;
+}
+
+/* 禁用状态 */
+.param-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #2a2a2a url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23666666' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+/* 移除重复的CSS定义，使用上面的grid布局 */

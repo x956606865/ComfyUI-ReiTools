@@ -5,7 +5,19 @@
 ## 🆕 最近更新
 
 <details open>
-<summary><strong>v1.4.2 (最新)</strong></summary>
+<summary><strong>v1.5.0 (最新)</strong></summary>
+
+添加了一个浮动工具面板，可以点击右下角的“Rei Tools”按钮打开，
+目前面板只有一个功能叫参数聚焦，类似 sdppp,只要将频繁需要调节的参数连接上一个 PrimitiveNode，
+然后点击刷新参数列表，对应参数就会显示在面板里，然后只需要将视角关注在工作流的输出位置即可，
+每次参数调节可以直接在浮动面板上面调节，不用来回拖动画布找节点。
+PS：做了节点改动或者 PrimitiveNode 连接了其他的节点后什么的，都需要点击一下刷新参数按钮，目前不会自动刷新
+![参数聚界面截图](screenshot/rei-tools-panel-1.png)
+![参数聚界面截图2](screenshot/rei-tools-panel-2.png)
+
+</details>
+<details >
+<summary><strong>v1.4.2</strong></summary>
 
 新增 v2 版本自定义下拉框组件，参考 kj 大佬写法，现在不用远距离连线了
 
@@ -118,6 +130,9 @@
 ---
 
 ## ⚙️ 配置管理器
+
+<details>
+<summary><strong>配置管理器功能介绍</strong></summary>
 
 配置管理器是一个强大的侧边栏工具，用于管理环境配置变量。无需在工作流中添加节点，直接通过可视化界面进行配置管理。
 
@@ -238,13 +253,56 @@
 | 🔒 中    | Token 类型  | 一般敏感信息    | 🔒 列表隐藏 |
 | 🔐 高    | 加密 + 密码 | 重要 API 密钥等 | 🛡️ 密码保护 |
 
+</details>
+
 ---
 
 ## 🧩 工作流节点
 
 所有节点都可以在 `Rei Tools` 分类下找到。
 
+### 📱 参数聚焦面板
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
+
+浮动工具面板，通过点击右下角的"Rei Tools"按钮打开。提供参数聚焦功能，让您可以在固定位置调节工作流中的关键参数。
+
+#### 功能特点
+
+- **集中管理**：将频繁调节的参数集中到一个浮动面板中
+- **拖拽排序**：支持拖拽调整参数的显示顺序
+- **响应式布局**：面板宽度超过阈值时自动切换为两列布局
+- **多种输入类型**：支持文本、数字、下拉选择等多种参数类型
+
+#### 使用方法
+
+1. **连接参数**：将需要频繁调节的参数连接到 `PrimitiveNode`
+2. **打开面板**：点击右下角的"Rei Tools"按钮打开浮动面板
+3. **刷新列表**：在面板中点击"刷新参数列表"按钮加载参数
+4. **调节参数**：直接在面板中修改参数值，无需在画布中寻找节点
+
+#### 适用场景
+
+- **参数调优**：在输出位置观察结果的同时调节参数
+- **批量测试**：快速切换不同的参数组合进行测试
+- **工作流演示**：保持画布整洁，专注于结果展示
+
+#### 注意事项
+
+- 节点改动或 PrimitiveNode 连接变化后需要手动刷新参数列表
+- 目前不支持自动检测参数变化，需要主动刷新
+
+![参数聚焦界面截图](screenshot/rei-tools-panel-1.png)
+
+![参数聚焦界面截图2](screenshot/rei-tools-panel-2.png)
+
+</details>
+
 ### Rei 配置读取器 (`ReiConfigLoader`)
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
 
 从环境配置文件中读取指定的配置值，支持加密配置的自动解密。
 
@@ -268,7 +326,12 @@
 
 **使用示例**：如图所示，通过配置读取器获取 `glm_v4_token` 的值，并将其传递给需要 API 密钥的节点。
 
+</details>
+
 ### Rei 三键组合加载器 (`Rei3KeyGroupLoader`)
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
 
 从 3KeyGroup 类型的配置中批量加载三个键对应的值，支持组合中包含加密配置的解密。
 
@@ -304,7 +367,12 @@
 
 **使用示例**：如图所示，创建了名为 `glm配置组合` 的三键组合，将三个配置值批量传递给 GLM4 对话节点，实现了便捷的批量配置管理。
 
+</details>
+
 ### Rei Prompt 文件选择器 (`ReiPromptFileSelector`)
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
 
 从指定文件夹中选择并加载文本文件内容。
 
@@ -321,7 +389,12 @@
 - **输出**：
   - `text` (`STRING`): 文件的文本内容
 
+</details>
+
 ### Rei 自定义下拉框组合
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
 
 由两个协作节点组成的动态下拉选择系统：
 
@@ -383,9 +456,14 @@
 3. 在下拉框中选择需要的选项
 4. 获取对应的输出值用于后续处理
 
+</details>
+
 ---
 
 ### Rei 图片元数据加载器 (ReiImageMetadataLoader)
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
 
 一个强大的图片元数据提取节点，支持从 AI 生成的图片中提取 prompt、参数和 workflow 信息。
 
@@ -429,9 +507,14 @@
 3. **批量处理**：提取大量图片的生成参数进行分析
 4. **参数复用**：将提取的参数应用到新的生成任务中
 
+</details>
+
 ---
 
 ### Rei 元数据解析器 (ReiMetadataParser)
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
 
 专门用于解析 WebUI 格式参数文本的节点，将参数字符串转换为结构化的参数对象。
 
@@ -466,9 +549,14 @@
 3. **批量分析**：处理大量 WebUI 格式的参数文本
 4. **参数验证**：检查和验证参数的完整性
 
+</details>
+
 ---
 
 ## 📸 截图演示
+
+<details>
+<summary><strong>查看界面截图和演示</strong></summary>
 
 ### 配置管理器界面
 
@@ -490,6 +578,8 @@
 ### 自定义下拉框组合
 
 ![Rei 自定义下拉框组合使用示例](screenshot/screenshot1.png)
+
+</details>
 
 ---
 

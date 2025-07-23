@@ -165,3 +165,16 @@ def _convert_value(value, value_type):
 
 
 print("[ReiConfig] API 路由注册完成") 
+
+
+
+@routes.get(f'/rei-tools/{{file}}')
+async def get_resource(request):
+    DIR_WEB = os.path.join(os.path.dirname(__file__), 'rei-web-dist')
+    print("--------------------------------")
+    print(DIR_WEB)
+    print(request.match_info['file'])
+    """ Returns a resource file. """
+    return web.FileResponse(os.path.join(DIR_WEB, request.match_info['file']))
+
+print("[ReiConfig] API js路由注册完成") 
