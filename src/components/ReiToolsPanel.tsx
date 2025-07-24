@@ -1397,7 +1397,7 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
         {activeTab === 'info' && (
           <div className="info-section">
             <h3>关于 ReiTools</h3>
-            <p>版本：1.4.2</p>
+            <p>版本：1.5.1</p>
             <p>作者：natsurei</p>
             <p>
               这是一个用于 ComfyUI

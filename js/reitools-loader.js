@@ -158,7 +158,7 @@ window.comfyUIAPP = app;
   // 导出全局API
   window.ReiToolsLoader = {
     init: initReiTools,
-    version: '1.5.0',
+    version: '1.5.1',
   };
 })();
 app.registerExtension({

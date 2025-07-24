@@ -5,7 +5,7 @@
 ## 🆕 最近更新
 
 <details open>
-<summary><strong>v1.5.0 (最新)</strong></summary>
+<summary><strong>v1.5.1 (最新)</strong></summary>
 
 添加了一个浮动工具面板，可以点击右下角的"Rei Tools"按钮打开。
 
