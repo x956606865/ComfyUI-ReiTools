@@ -773,6 +773,11 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                   if (!option.includes('\\') && !option.includes('/')) {
                     return true;
                   }
+                  console.log(
+                    '%c [ modelPaths ]-778',
+                    'font-size:13px; background:pink; color:#bf2c9f;',
+                    modelPaths
+                  );
 
                   const validPath = modelPaths.find((modelPath: any) => {
                     const pathSplitter = modelPath.includes('\\') ? '\\' : '/';
