@@ -752,13 +752,24 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                 if (!option.includes('\\') && !option.includes('/')) {
                   return true;
                 }
+
                 const validPath = modelPaths.find((modelPath: any) => {
-                  if (modelPath.endsWith('/')) {
-                    return option.startsWith(modelPath);
+                  const pathSplitter = modelPath.includes('\\') ? '\\' : '/';
+                  const modelPathArray = modelPath.split(pathSplitter);
+
+                  const newPath = modelPathArray.slice(1).join(pathSplitter);
+                  if (newPath.endsWith(pathSplitter)) {
+                    return option.startsWith(newPath);
                   } else {
-                    return option.startsWith(modelPath + '/');
+                    return option.startsWith(newPath + pathSplitter);
                   }
                 });
+                console.log(
+                  '%c [ validPath ]-756',
+                  'font-size:13px; background:pink; color:#bf2c9f;',
+                  validPath
+                );
+
                 if (validPath) {
                   return true;
                 }
@@ -796,6 +807,7 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
     setFormValues(newFormValues);
   };
   useEffect(() => {
+    // return;
     Object.entries(formValues).forEach(([key, value]: any) => {
       const [id, targetId, targetSlot] = key.split('_');
       const primaryNode = window.comfyUIAPP?.graph?.getNodeById(id);
@@ -804,11 +816,20 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
         const valueWidget = primaryNode.widgets.find(
           (w: any) => w.name === 'value'
         );
+        console.log(
+          '%c [ valueWidget ]-820',
+          'font-size:13px; background:pink; color:#bf2c9f;',
+          valueWidget
+        );
+        // return;
         if (valueWidget) {
           valueWidget.value = value;
-        }
-        if (valueWidget.callback) {
-          valueWidget.callback(value, valueWidget, primaryNode);
+          if (
+            valueWidget.callback &&
+            !window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange
+          ) {
+            valueWidget.callback(value, valueWidget, primaryNode);
+          }
         }
       }
     });
@@ -912,7 +933,14 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
   useEffect(() => {
     setIsWideLayout(350 >= 500); // 初始宽度350px
   }, []);
-
+  useEffect(() => {
+    if (
+      window?.ReiToolsUI?.ReiToolsAPI &&
+      !window?.ReiToolsUI?.ReiToolsAPI?.refreshParamsList
+    ) {
+      window.ReiToolsUI.ReiToolsAPI.refreshParamsList = refreshParamsList;
+    }
+  }, []);
   return (
     <FloatingPanel
       title="ReiTools 工具面板"
@@ -1175,6 +1203,24 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                 >
                   📤 加载预设
                 </button>
+                <button
+                  className="preset-btn secondary"
+                  onClick={() => {
+                    setPresetName('');
+                    setPresetTitle('');
+                    setPresetDescription('');
+                    setModelPaths([]);
+                    setLoraPaths([]);
+                    setModelLoaderNodes([
+                      'CheckpointLoaderSimple',
+                      'UNETLoader',
+                    ]);
+                    setLoraLoaderNodes(['LoraLoader']);
+                    setPresetMessage('');
+                  }}
+                >
+                  🔄 清空当前
+                </button>
               </div>
             </div>
 
@@ -1243,15 +1289,16 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                         const result =
                           await FileSelector.selectModelDirectory();
                         if (!modelPaths.includes(result.path)) {
-                          let splitter = '/';
-                          if (result.path.includes('\\')) {
-                            splitter = '\\';
+                          if (
+                            !result.path.includes('\\') &&
+                            !result.path.includes('/')
+                          ) {
+                            alert(
+                              '请选择一个特定模型目录下的子文件下，目前模型目录下不在子文件夹下的文件会默认显示，无需添加'
+                            );
+                            return;
                           }
-                          let temp = result.path.split(splitter);
-                          if (temp.length > 1) {
-                            temp = temp.slice(1);
-                          }
-                          setModelPaths([...modelPaths, temp.join(splitter)]);
+                          setModelPaths([...modelPaths, result.path]);
                         }
                       } catch (error) {
                         console.log('用户取消了路径选择');
@@ -1288,6 +1335,15 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                       try {
                         const result = await FileSelector.selectLoraDirectory();
                         if (!loraPaths.includes(result.path)) {
+                          if (
+                            !result.path.includes('\\') &&
+                            !result.path.includes('/')
+                          ) {
+                            alert(
+                              '请选择一个特定模型目录下的子文件下，目前模型目录下不在子文件夹下的文件会默认显示，无需添加'
+                            );
+                            return;
+                          }
                           setLoraPaths([...loraPaths, result.path]);
                         }
                       } catch (error) {

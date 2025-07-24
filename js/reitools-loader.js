@@ -181,4 +181,127 @@ app.registerExtension({
     //   }
     // };
   },
+  async setup() {
+    // 确保 PrimitiveNode 已经存在
+    if (!LiteGraph.Nodes.PrimitiveNode) {
+      console.warn(
+        'MyPlugin.PrimitiveNodeWatcher: PrimitiveNode not found. Skipping patch.'
+      );
+      return;
+    }
+
+    // 1. 保存原始的 onConnectionsChange 方法
+    const original_onConnectionsChange =
+      LiteGraph.Nodes.PrimitiveNode.prototype.onConnectionsChange;
+
+    // 2. 重写 onConnectionsChange 方法
+    LiteGraph.Nodes.PrimitiveNode.prototype.onConnectionsChange = function (
+      type, // LiteGraph.INPUT 或 LiteGraph.OUTPUT
+      slotIndex, // 发生变化的插槽索引
+      isConnected, // true = 已连接, false = 已断开
+      link_info, // 连接信息对象
+      ioSlot // 插槽对象本身
+    ) {
+      // 3. 首先，调用原始方法，确保节点行为正常
+      original_onConnectionsChange?.apply(this, arguments);
+      setTimeout(() => {
+        const valueWidget = this.widgets
+          ? this.widgets.find((w) => w.name === 'value')
+          : undefined;
+        // console.log(
+        //   '%c [ valueWidget ]-213',
+        //   'font-size:13px; background:pink; color:#bf2c9f;',
+        //   valueWidget
+        // );
+
+        if (valueWidget) {
+          //   console.log(
+          //     '%c [ valueWidget._ReiToolsPatched ]-221',
+          //     'font-size:13px; background:pink; color:#bf2c9f;',
+          //     valueWidget._ReiToolsPatched
+          //   );
+          //   console.log(
+          //     '%c [ valueWidget ]-220',
+          //     'font-size:13px; background:pink; color:#bf2c9f;',
+          //     valueWidget
+          //   );
+
+          // 如果找到了 "value" 小部件，并且我们还没有包装过它的回调
+          if (!valueWidget._ReiToolsPatched) {
+            console.log(
+              `[MyPlugin] Found 'value' widget on node '${this.title}'. Patching its callback.`
+            );
+
+            const originalWidgetCallback = valueWidget.callback;
+
+            valueWidget.callback = (value, widget, node) => {
+              //   console.log(
+              //     '%c [ node ]-239',
+              //     'font-size:13px; background:pink; color:#bf2c9f;',
+              //     node
+              //   );
+              //   console.log(
+              //     '%c [ value ]-239',
+              //     'font-size:13px; background:pink; color:#bf2c9f;',
+              //     value
+              //   );
+              // c. 首先，执行我们自己的自定义回调逻辑
+              //   console.log(
+              //     `%c[MyPlugin Callback]`,
+              //     'background: #aa00ff; color: #fff; padding: 2px 5px; border-radius: 3px;',
+              //     `Primitive value changed on node '${node.title}' to:`,
+              //     value
+              //   );
+              let r;
+              if (originalWidgetCallback) {
+                r = originalWidgetCallback.apply(widget, [value, widget, node]);
+              }
+
+              if (
+                typeof window?.ReiToolsUI?.ReiToolsAPI?.refreshParamsList ===
+                'function'
+              ) {
+                window.ReiToolsUI.ReiToolsAPI.widgetValueChange = true;
+                try {
+                  window.ReiToolsUI.ReiToolsAPI.refreshParamsList();
+                } catch (e) {
+                  console.error(e);
+                } finally {
+                  window.ReiToolsUI.ReiToolsAPI.widgetValueChange = false;
+                }
+              }
+              return r;
+              //   setTimeout(() => {
+              //     if (
+              //       typeof window?.ReiToolsUI?.ReiToolsAPI?.refreshParamsList ===
+              //       'function'
+              //     ) {
+              //       window?.ReiToolsUI?.ReiToolsAPI.refreshParamsList();
+              //     }
+              //   }, 100);
+            };
+
+            // e. 设置一个标记，防止重复包装
+            valueWidget._ReiToolsPatched = true;
+          }
+        }
+      }, 100);
+
+      console.log(
+        `%c[PrimitiveNode Watcher]`,
+        'color: #66d9ef',
+        `Node '${this.title || 'Untitled'}' (ID: ${
+          this.id
+        }) connection changed!`
+      );
+      setTimeout(() => {
+        if (
+          typeof window?.ReiToolsUI?.ReiToolsAPI?.refreshParamsList ===
+          'function'
+        ) {
+          window?.ReiToolsUI?.ReiToolsAPI.refreshParamsList();
+        }
+      }, 300);
+    };
+  },
 });
