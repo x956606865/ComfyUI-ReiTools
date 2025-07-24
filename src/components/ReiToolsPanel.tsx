@@ -736,23 +736,23 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
               //   'font-size:13px; background:pink; color:#bf2c9f;',
               //   downstreamNode
               // );
-              // console.log(
-              //   '%c [ modelLoaderNodes ]-747',
-              //   'font-size:13px; background:pink; color:#bf2c9f;',
-              //   modelLoaderNodes,
-              //   modelPaths,
-              //   loraLoaderNodes,
-              //   loraPaths,
-              //   downstreamNode.type,
-              //   (Array.isArray(modelLoaderNodes) &&
-              //     Array.isArray(modelPaths) &&
-              //     modelPaths?.length > 0 &&
-              //     modelLoaderNodes?.includes(downstreamNode.type)) ||
-              //     (Array.isArray(loraLoaderNodes) &&
-              //       Array.isArray(loraPaths) &&
-              //       loraPaths?.length > 0 &&
-              //       loraLoaderNodes?.includes(downstreamNode.type))
-              // );
+              console.log(
+                '%c [ modelLoaderNodes ]-747',
+                'font-size:13px; background:pink; color:#bf2c9f;',
+                modelLoaderNodes,
+                modelPaths,
+                loraLoaderNodes,
+                loraPaths,
+                downstreamNode.type,
+                (Array.isArray(modelLoaderNodes) &&
+                  Array.isArray(modelPaths) &&
+                  modelPaths?.length > 0 &&
+                  modelLoaderNodes?.includes(downstreamNode.type)) ||
+                  (Array.isArray(loraLoaderNodes) &&
+                    Array.isArray(loraPaths) &&
+                    loraPaths?.length > 0 &&
+                    loraLoaderNodes?.includes(downstreamNode.type))
+              );
 
               if (
                 (Array.isArray(modelLoaderNodes) &&
@@ -765,6 +765,11 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                   loraLoaderNodes?.includes(downstreamNode.type))
               ) {
                 options = options.filter((option: any) => {
+                  console.log(
+                    '%c [ option ]-768',
+                    'font-size:13px; background:pink; color:#bf2c9f;',
+                    option
+                  );
                   if (!option.includes('\\') && !option.includes('/')) {
                     return true;
                   }
