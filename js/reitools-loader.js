@@ -263,11 +263,15 @@ app.registerExtension({
               ) {
                 window.ReiToolsUI.ReiToolsAPI.widgetValueChange = true;
                 try {
-                  window.ReiToolsUI.ReiToolsAPI.refreshParamsList();
+                  window.ReiToolsUI.ReiToolsAPI.refreshParamsList(
+                    'value widget change'
+                  );
                 } catch (e) {
                   console.error(e);
                 } finally {
-                  window.ReiToolsUI.ReiToolsAPI.widgetValueChange = false;
+                  setTimeout(() => {
+                    window.ReiToolsUI.ReiToolsAPI.widgetValueChange = false;
+                  }, 200);
                 }
               }
               return r;
@@ -299,7 +303,9 @@ app.registerExtension({
           typeof window?.ReiToolsUI?.ReiToolsAPI?.refreshParamsList ===
           'function'
         ) {
-          window?.ReiToolsUI?.ReiToolsAPI.refreshParamsList();
+          window?.ReiToolsUI?.ReiToolsAPI.refreshParamsList(
+            'primitive node link change'
+          );
         }
       }, 300);
     };

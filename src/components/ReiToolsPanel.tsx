@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FloatingPanel } from './FloatingPanel';
 import FileSelector from '../utils/fileSelector';
 import './ReiToolsPanel.css';
@@ -36,15 +36,6 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
   ]);
   const [loraLoaderNodes, setLoraLoaderNodes] = useState<string[]>([
     'LoraLoader',
-  ]);
-  useEffect(() => {
-    refreshParamsList();
-  }, [
-    selectedPreset,
-    modelPaths,
-    loraPaths,
-    modelLoaderNodes,
-    loraLoaderNodes,
   ]);
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -122,7 +113,7 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
       );
       setLoraLoaderNodes(preset.content?.loraLoaderNodes || ['LoraLoader']);
       setPresetMessage(`预设 "${preset.title || preset.name}" 加载成功`);
-      refreshParamsList();
+      refreshParamsList('preset update');
     } catch (error) {
       setPresetMessage(
         `加载预设失败: ${error instanceof Error ? error.message : '未知错误'}`
@@ -703,108 +694,165 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
     document.body.appendChild(overlay);
   };
 
-  const refreshParamsList = () => {
-    const nodes = window.comfyUIAPP?.graph._nodes;
-    const primaryNodes = nodes.filter((n: any) => n.type === 'PrimitiveNode');
-    // console.log(
-    //   '%c [ primaryNode ]-28',
-    //   'font-size:13px; background:pink; color:#bf2c9f;',
-    //   primaryNodes
-    // );
-    const newList: any = [];
-    const newFormValues: any = {};
-    primaryNodes.forEach((primaryNode: any) => {
-      if (
-        primaryNode.outputs?.length > 0 &&
-        primaryNode.outputs[0].links?.length > 0
-      ) {
-        const output = primaryNode.outputs[0];
-        const links = output.links;
-        links.forEach((linkId: any) => {
-          const link = window.comfyUIAPP?.graph?.links[linkId];
+  const refreshParamsList = useCallback(
+    (by: string) => {
+      console.log(
+        '%c [ by ]-707',
+        'font-size:13px; background:pink; color:#bf2c9f;',
+        by,
+        modelPaths
+      );
+      const nodes = window.comfyUIAPP?.graph._nodes;
+      const primaryNodes = nodes.filter((n: any) => n.type === 'PrimitiveNode');
+      // console.log(
+      //   '%c [ primaryNode ]-28',
+      //   'font-size:13px; background:pink; color:#bf2c9f;',
+      //   primaryNodes
+      // );
+      const newList: any = [];
+      const newFormValues: any = {};
+      primaryNodes.forEach((primaryNode: any) => {
+        if (
+          primaryNode.outputs?.length > 0 &&
+          primaryNode.outputs[0].links?.length > 0
+        ) {
+          const output = primaryNode.outputs[0];
+          const links = output.links;
+          links.forEach((linkId: any) => {
+            const link = window.comfyUIAPP?.graph?.links[linkId];
 
-          if (link) {
-            const type = link.type;
-            const downstreamNode = window.comfyUIAPP?.graph?.getNodeById(
-              link.target_id
-            );
-            const targetSlot = downstreamNode.inputs[link.target_slot];
-            const valueWidget = primaryNode.widgets.find(
-              (w: any) => w.name === 'value'
-            );
-            let options = valueWidget?.options?.values || [];
-            // console.log(
-            //   '%c [ downstreamNode ]-52',
-            //   'font-size:13px; background:pink; color:#bf2c9f;',
-            //   downstreamNode
-            // );
-            if (
-              (Array.isArray(modelLoaderNodes) &&
-                Array.isArray(modelPaths) &&
-                modelPaths?.length > 0 &&
-                modelLoaderNodes?.includes(downstreamNode.type)) ||
-              (Array.isArray(loraLoaderNodes) &&
-                Array.isArray(loraPaths) &&
-                loraPaths?.length > 0 &&
-                loraLoaderNodes?.includes(downstreamNode.type))
-            ) {
-              options = options.filter((option: any) => {
-                if (!option.includes('\\') && !option.includes('/')) {
-                  return true;
-                }
+            if (link) {
+              const type = link.type;
+              const downstreamNode = window.comfyUIAPP?.graph?.getNodeById(
+                link.target_id
+              );
+              const targetSlot = downstreamNode.inputs[link.target_slot];
+              const valueWidget = primaryNode.widgets.find(
+                (w: any) => w.name === 'value'
+              );
+              let options = valueWidget?.options?.values || [];
+              // console.log(
+              //   '%c [ downstreamNode ]-52',
+              //   'font-size:13px; background:pink; color:#bf2c9f;',
+              //   downstreamNode
+              // );
+              // console.log(
+              //   '%c [ modelLoaderNodes ]-747',
+              //   'font-size:13px; background:pink; color:#bf2c9f;',
+              //   modelLoaderNodes,
+              //   modelPaths,
+              //   loraLoaderNodes,
+              //   loraPaths,
+              //   downstreamNode.type,
+              //   (Array.isArray(modelLoaderNodes) &&
+              //     Array.isArray(modelPaths) &&
+              //     modelPaths?.length > 0 &&
+              //     modelLoaderNodes?.includes(downstreamNode.type)) ||
+              //     (Array.isArray(loraLoaderNodes) &&
+              //       Array.isArray(loraPaths) &&
+              //       loraPaths?.length > 0 &&
+              //       loraLoaderNodes?.includes(downstreamNode.type))
+              // );
 
-                const validPath = modelPaths.find((modelPath: any) => {
-                  const pathSplitter = modelPath.includes('\\') ? '\\' : '/';
-                  const modelPathArray = modelPath.split(pathSplitter);
+              if (
+                (Array.isArray(modelLoaderNodes) &&
+                  Array.isArray(modelPaths) &&
+                  modelPaths?.length > 0 &&
+                  modelLoaderNodes?.includes(downstreamNode.type)) ||
+                (Array.isArray(loraLoaderNodes) &&
+                  Array.isArray(loraPaths) &&
+                  loraPaths?.length > 0 &&
+                  loraLoaderNodes?.includes(downstreamNode.type))
+              ) {
+                options = options.filter((option: any) => {
+                  if (!option.includes('\\') && !option.includes('/')) {
+                    return true;
+                  }
 
-                  const newPath = modelPathArray.slice(1).join(pathSplitter);
-                  return (
-                    option.startsWith(newPath + '/') ||
-                    option.startsWith(newPath + '\\')
+                  const validPath = modelPaths.find((modelPath: any) => {
+                    const pathSplitter = modelPath.includes('\\') ? '\\' : '/';
+                    const modelPathArray = modelPath.split(pathSplitter);
+
+                    const newPath = modelPathArray.slice(1);
+                    // console.log(
+                    //   '%c [ newPath.join("/") + "/" ]-763',
+                    //   'font-size:13px; background:pink; color:#bf2c9f;',
+                    //   newPath.join('/') + '/'
+                    // );
+                    // console.log(
+                    //   '%c [  option.startsWith(newPath.join("\\") + "\\") ]-766',
+                    //   'font-size:13px; background:pink; color:#bf2c9f;',
+                    //   newPath.join('\\') + '\\'
+                    // );
+
+                    return (
+                      option.startsWith(newPath.join('/') + '/') ||
+                      option.startsWith(newPath.join('\\') + '\\')
+                    );
+                  });
+                  console.log(
+                    '%c [ validPath ]-756',
+                    'font-size:13px; background:pink; color:#bf2c9f;',
+                    validPath
                   );
+
+                  if (validPath) {
+                    return true;
+                  }
+                  return false;
                 });
-                // console.log(
-                //   '%c [ validPath ]-756',
-                //   'font-size:13px; background:pink; color:#bf2c9f;',
-                //   validPath
-                // );
+                console.log(
+                  '%c [ options ]-752',
+                  'font-size:13px; background:pink; color:#bf2c9f;',
+                  options
+                );
+              }
 
-                if (validPath) {
-                  return true;
-                }
-                return false;
+              newList.push({
+                target_id: link.target_id,
+                target_slot: link.target_slot,
+                id: link.origin_id,
+                name: targetSlot?.localized_name || targetSlot?.name,
+                type: type.toLowerCase() === 'string' ? valueWidget.type : type,
+                title: downstreamNode.title,
+                // downstreamNode,
+                // primaryNode,
+                comboOptions: options,
               });
-            }
 
-            newList.push({
-              target_id: link.target_id,
-              target_slot: link.target_slot,
-              id: link.origin_id,
-              name: targetSlot?.localized_name || targetSlot?.name,
-              type: type.toLowerCase() === 'string' ? valueWidget.type : type,
-              title: downstreamNode.title,
-              downstreamNode,
-              primaryNode,
-              comboOptions: options,
-            });
-
-            if (valueWidget) {
-              newFormValues[
-                `${link.origin_id}_${link.target_id}_${link.target_slot}`
-              ] = valueWidget.value;
+              if (valueWidget) {
+                newFormValues[
+                  `${link.origin_id}_${link.target_id}_${link.target_slot}`
+                ] = valueWidget.value;
+              }
             }
-          }
-        });
-      }
-    });
-    setParamsList(newList);
-    // console.log(
-    //   '%c [ newList ]-86',
-    //   'font-size:13px; background:pink; color:#bf2c9f;',
-    //   newList
-    // );
-    setFormValues(newFormValues);
-  };
+          });
+        }
+      });
+
+      setParamsList(newList);
+      // console.log(
+      //   '%c [ newList ]-86',
+      //   'font-size:13px; background:pink; color:#bf2c9f;',
+      //   newList
+      // );
+      setFormValues(newFormValues);
+    },
+    [modelPaths, loraPaths, modelLoaderNodes, loraLoaderNodes]
+  );
+
+  // 当预设相关状态变化时刷新参数列表
+  useEffect(() => {
+    refreshParamsList('preset update');
+  }, [
+    selectedPreset,
+    modelPaths,
+    loraPaths,
+    modelLoaderNodes,
+    loraLoaderNodes,
+    refreshParamsList,
+  ]);
+
   useEffect(() => {
     // return;
     Object.entries(formValues).forEach(([key, value]: any) => {
@@ -815,18 +863,24 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
         const valueWidget = primaryNode.widgets.find(
           (w: any) => w.name === 'value'
         );
-        console.log(
-          '%c [ valueWidget ]-820',
-          'font-size:13px; background:pink; color:#bf2c9f;',
-          valueWidget
-        );
+        // console.log(
+        //   '%c [ valueWidget ]-820',
+        //   'font-size:13px; background:pink; color:#bf2c9f;',
+        //   valueWidget
+        // );
         // return;
-        if (valueWidget) {
+        console.log(
+          '%c [ window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange ]-849',
+          'font-size:13px; background:pink; color:#bf2c9f;',
+          window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange
+        );
+
+        if (
+          valueWidget &&
+          !window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange
+        ) {
           valueWidget.value = value;
-          if (
-            valueWidget.callback &&
-            !window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange
-          ) {
+          if (valueWidget.callback) {
             valueWidget.callback(value, valueWidget, primaryNode);
           }
         }
@@ -932,14 +986,45 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
   useEffect(() => {
     setIsWideLayout(350 >= 500); // 初始宽度350px
   }, []);
+
+  // 使用useEffect来动态更新全局API中的refreshParamsList函数
   useEffect(() => {
-    if (
-      window?.ReiToolsUI?.ReiToolsAPI &&
-      !window?.ReiToolsUI?.ReiToolsAPI?.refreshParamsList
-    ) {
-      window.ReiToolsUI.ReiToolsAPI.refreshParamsList = refreshParamsList;
+    if (window?.ReiToolsUI?.ReiToolsAPI) {
+      window.ReiToolsUI.ReiToolsAPI.refreshParamsList = (by: string) => {
+        console.log(
+          '%c [ modelPaths ]-988',
+          'font-size:13px; background:pink; color:#bf2c9f;',
+          modelPaths
+        );
+        console.log(
+          '%c [ paramsList ]-988',
+          'font-size:13px; background:pink; color:#bf2c9f;',
+          paramsList
+        );
+        refreshParamsList(by);
+      };
     }
-  }, []);
+  }, [
+    modelPaths,
+    loraPaths,
+    modelLoaderNodes,
+    loraLoaderNodes,
+    refreshParamsList,
+  ]);
+  useEffect(() => {
+    console.log(
+      '%c [ paramsList ]-961',
+      'font-size:13px; background:pink; color:#bf2c9f;',
+      paramsList
+    );
+  }, [paramsList]);
+  useEffect(() => {
+    console.log(
+      '%c [ modelPaths ]-1003',
+      'font-size:13px; background:pink; color:#bf2c9f;',
+      modelPaths
+    );
+  }, [modelPaths]);
   return (
     <FloatingPanel
       title="ReiTools 工具面板"
@@ -1006,7 +1091,10 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
           <div className="param-focus-section">
             <div className="info-section">介绍</div>
             <div className="button-group">
-              <button className="refresh-button" onClick={refreshParamsList}>
+              <button
+                className="refresh-button"
+                onClick={() => refreshParamsList('refresh button')}
+              >
                 <span className="refresh-icon">🔄</span>
                 刷新参数列表
               </button>
