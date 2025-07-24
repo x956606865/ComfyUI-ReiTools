@@ -755,29 +755,25 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
               );
 
               if (
-                (Array.isArray(modelLoaderNodes) &&
-                  Array.isArray(modelPaths) &&
-                  modelPaths?.length > 0 &&
-                  modelLoaderNodes?.includes(downstreamNode.type)) ||
-                (Array.isArray(loraLoaderNodes) &&
-                  Array.isArray(loraPaths) &&
-                  loraPaths?.length > 0 &&
-                  loraLoaderNodes?.includes(downstreamNode.type))
+                Array.isArray(modelLoaderNodes) &&
+                Array.isArray(modelPaths) &&
+                modelPaths?.length > 0 &&
+                modelLoaderNodes?.includes(downstreamNode.type)
               ) {
                 options = options.filter((option: any) => {
-                  console.log(
-                    '%c [ option ]-768',
-                    'font-size:13px; background:pink; color:#bf2c9f;',
-                    option
-                  );
+                  // console.log(
+                  //   '%c [ option ]-768',
+                  //   'font-size:13px; background:pink; color:#bf2c9f;',
+                  //   option
+                  // );
                   if (!option.includes('\\') && !option.includes('/')) {
                     return true;
                   }
-                  console.log(
-                    '%c [ modelPaths ]-778',
-                    'font-size:13px; background:pink; color:#bf2c9f;',
-                    modelPaths
-                  );
+                  // console.log(
+                  //   '%c [ modelPaths ]-778',
+                  //   'font-size:13px; background:pink; color:#bf2c9f;',
+                  //   modelPaths
+                  // );
 
                   const validPath = modelPaths.find((modelPath: any) => {
                     const pathSplitter = modelPath.includes('\\') ? '\\' : '/';
@@ -800,11 +796,68 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                       option.startsWith(newPath.join('\\') + '\\')
                     );
                   });
-                  console.log(
-                    '%c [ validPath ]-756',
-                    'font-size:13px; background:pink; color:#bf2c9f;',
-                    validPath
-                  );
+                  // console.log(
+                  //   '%c [ validPath ]-756',
+                  //   'font-size:13px; background:pink; color:#bf2c9f;',
+                  //   validPath
+                  // );
+                  if (!validPath) {
+                  }
+
+                  if (validPath) {
+                    return true;
+                  }
+                  return false;
+                });
+                // console.log(
+                //   '%c [ options ]-752',
+                //   'font-size:13px; background:pink; color:#bf2c9f;',
+                //   options
+                // );
+              } else if (
+                Array.isArray(loraLoaderNodes) &&
+                Array.isArray(loraPaths) &&
+                loraPaths?.length > 0 &&
+                loraLoaderNodes?.includes(downstreamNode.type)
+              ) {
+                options = options.filter((option: any) => {
+                  // console.log(
+                  //   '%c [ option ]-768',
+                  //   'font-size:13px; background:pink; color:#bf2c9f;',
+                  //   option
+                  // );
+                  if (!option.includes('\\') && !option.includes('/')) {
+                    return true;
+                  }
+
+                  const validPath = loraPaths.find((modelPath: any) => {
+                    const pathSplitter = modelPath.includes('\\') ? '\\' : '/';
+                    const modelPathArray = modelPath.split(pathSplitter);
+
+                    const newPath = modelPathArray.slice(1);
+                    // console.log(
+                    //   '%c [ newPath.join("/") + "/" ]-763',
+                    //   'font-size:13px; background:pink; color:#bf2c9f;',
+                    //   newPath.join('/') + '/'
+                    // );
+                    // console.log(
+                    //   '%c [  option.startsWith(newPath.join("\\") + "\\") ]-766',
+                    //   'font-size:13px; background:pink; color:#bf2c9f;',
+                    //   newPath.join('\\') + '\\'
+                    // );
+
+                    return (
+                      option.startsWith(newPath.join('/') + '/') ||
+                      option.startsWith(newPath.join('\\') + '\\')
+                    );
+                  });
+                  // console.log(
+                  //   '%c [ validPath ]-756',
+                  //   'font-size:13px; background:pink; color:#bf2c9f;',
+                  //   validPath
+                  // );
+                  // if (!validPath) {
+                  // }
 
                   if (validPath) {
                     return true;
