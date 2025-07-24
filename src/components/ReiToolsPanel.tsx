@@ -774,16 +774,16 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                     const modelPathArray = modelPath.split(pathSplitter);
 
                     const newPath = modelPathArray.slice(1);
-                    // console.log(
-                    //   '%c [ newPath.join("/") + "/" ]-763',
-                    //   'font-size:13px; background:pink; color:#bf2c9f;',
-                    //   newPath.join('/') + '/'
-                    // );
-                    // console.log(
-                    //   '%c [  option.startsWith(newPath.join("\\") + "\\") ]-766',
-                    //   'font-size:13px; background:pink; color:#bf2c9f;',
-                    //   newPath.join('\\') + '\\'
-                    // );
+                    console.log(
+                      '%c [ newPath.join("/") + "/" ]-763',
+                      'font-size:13px; background:pink; color:#bf2c9f;',
+                      newPath.join('/') + '/'
+                    );
+                    console.log(
+                      '%c [  option.startsWith(newPath.join("\\") + "\\") ]-766',
+                      'font-size:13px; background:pink; color:#bf2c9f;',
+                      newPath.join('\\') + '\\'
+                    );
 
                     return (
                       option.startsWith(newPath.join('/') + '/') ||
@@ -801,11 +801,11 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                   }
                   return false;
                 });
-                console.log(
-                  '%c [ options ]-752',
-                  'font-size:13px; background:pink; color:#bf2c9f;',
-                  options
-                );
+                // console.log(
+                //   '%c [ options ]-752',
+                //   'font-size:13px; background:pink; color:#bf2c9f;',
+                //   options
+                // );
               }
 
               newList.push({
@@ -991,16 +991,6 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
   useEffect(() => {
     if (window?.ReiToolsUI?.ReiToolsAPI) {
       window.ReiToolsUI.ReiToolsAPI.refreshParamsList = (by: string) => {
-        console.log(
-          '%c [ modelPaths ]-988',
-          'font-size:13px; background:pink; color:#bf2c9f;',
-          modelPaths
-        );
-        console.log(
-          '%c [ paramsList ]-988',
-          'font-size:13px; background:pink; color:#bf2c9f;',
-          paramsList
-        );
         refreshParamsList(by);
       };
     }
@@ -1011,20 +1001,7 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
     loraLoaderNodes,
     refreshParamsList,
   ]);
-  useEffect(() => {
-    console.log(
-      '%c [ paramsList ]-961',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      paramsList
-    );
-  }, [paramsList]);
-  useEffect(() => {
-    console.log(
-      '%c [ modelPaths ]-1003',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      modelPaths
-    );
-  }, [modelPaths]);
+
   return (
     <FloatingPanel
       title="ReiTools 工具面板"
