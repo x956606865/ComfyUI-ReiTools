@@ -289,7 +289,7 @@ app.registerExtension({
             valueWidget._ReiToolsPatched = true;
           }
         }
-      }, 100);
+      }, 300);
 
       console.log(
         `%c[PrimitiveNode Watcher]`,
