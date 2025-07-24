@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FloatingPanel } from './FloatingPanel';
+import FileSelector from '../utils/fileSelector';
 import './ReiToolsPanel.css';
 
 export interface ReiToolsPanelProps {
@@ -18,15 +19,690 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isWideLayout, setIsWideLayout] = useState(false);
+
+  // 预设管理相关状态
+  const [selectedPreset, setSelectedPreset] = useState<any>(null);
+  const [presetName, setPresetName] = useState<string>('');
+  const [presetTitle, setPresetTitle] = useState<string>('');
+  const [presetDescription, setPresetDescription] = useState<string>('');
+  const [presetMessage, setPresetMessage] = useState<string>('');
+
+  // 预设配置内容
+  const [modelPaths, setModelPaths] = useState<string[]>([]);
+  const [loraPaths, setLoraPaths] = useState<string[]>([]);
+  const [modelLoaderNodes, setModelLoaderNodes] = useState<string[]>([
+    'CheckpointLoaderSimple',
+    'UNETLoader',
+  ]);
+  const [loraLoaderNodes, setLoraLoaderNodes] = useState<string[]>([
+    'LoraLoader',
+  ]);
+  useEffect(() => {
+    refreshParamsList();
+  }, [
+    selectedPreset,
+    modelPaths,
+    loraPaths,
+    modelLoaderNodes,
+    loraLoaderNodes,
+  ]);
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
 
-  // if (typeof window.ReiToolsLoader.updateNode !== 'function') {
-  //   window.ReiToolsLoader.updateNode = (nodes: any) => {
-  //     setNodes(nodes);
-  //   };
-  // }
+  const savePreset = async () => {
+    if (!presetName.trim()) {
+      setPresetMessage('请输入预设名称');
+      return;
+    }
+
+    setPresetMessage('正在保存...');
+
+    try {
+      // 构建预设内容
+      const presetContent = {
+        modelPaths: modelPaths,
+        loraPaths: loraPaths,
+        modelLoaderNodes: modelLoaderNodes,
+        loraLoaderNodes: loraLoaderNodes,
+      };
+
+      const response = await fetch('/api/rei/presets/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: presetName.trim(),
+          title: presetTitle.trim() || presetName.trim(),
+          description: presetDescription.trim(),
+          content: presetContent,
+          version: '1.0',
+          author: 'ReiTools User',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+      setPresetMessage(`预设 "${presetName}" 保存成功`);
+    } catch (error) {
+      setPresetMessage(
+        `保存失败: ${error instanceof Error ? error.message : '未知错误'}`
+      );
+    }
+  };
+
+  const loadPreset = async (presetName: string) => {
+    setPresetMessage('正在加载...');
+
+    try {
+      const response = await fetch(
+        `/api/rei/presets/get/${encodeURIComponent(presetName)}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const preset = await response.json();
+      setSelectedPreset(preset);
+      setPresetName(preset.name);
+      setPresetTitle(preset.title || '');
+      setPresetDescription(preset.description || '');
+      setModelPaths(preset.content?.modelPaths || []);
+      setLoraPaths(preset.content?.loraPaths || []);
+      setModelLoaderNodes(
+        preset.content?.modelLoaderNodes || [
+          'CheckpointLoaderSimple',
+          'UNETLoader',
+        ]
+      );
+      setLoraLoaderNodes(preset.content?.loraLoaderNodes || ['LoraLoader']);
+      setPresetMessage(`预设 "${preset.title || preset.name}" 加载成功`);
+      refreshParamsList();
+    } catch (error) {
+      setPresetMessage(
+        `加载预设失败: ${error instanceof Error ? error.message : '未知错误'}`
+      );
+    }
+  };
+
+  const showPresetSelector = async () => {
+    setPresetMessage('正在获取预设列表...');
+
+    try {
+      const response = await fetch('/api/rei/presets/list');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const presetList = data.presets || [];
+
+      if (presetList.length === 0) {
+        setPresetMessage('暂无可用预设');
+        return;
+      }
+
+      // 创建预设选择弹框
+      const overlay = document.createElement('div');
+      overlay.className = 'preset-selector-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      `;
+
+      const modal = document.createElement('div');
+      modal.className = 'preset-selector-modal';
+      modal.style.cssText = `
+        background: #2b2b2b;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        color: #ffffff;
+      `;
+
+      const header = document.createElement('div');
+      header.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #404040;
+        background: #333333;
+        border-radius: 8px 8px 0 0;
+      `;
+
+      const title = document.createElement('h3');
+      title.textContent = '选择预设';
+      title.style.cssText = `
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #4CAF50;
+      `;
+
+      const closeButton = document.createElement('button');
+      closeButton.textContent = '×';
+      closeButton.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #ffffff;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+      `;
+
+      closeButton.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        setPresetMessage('');
+      });
+
+      closeButton.addEventListener('mouseover', () => {
+        closeButton.style.backgroundColor = '#555555';
+      });
+
+      closeButton.addEventListener('mouseout', () => {
+        closeButton.style.backgroundColor = 'transparent';
+      });
+
+      header.appendChild(title);
+      header.appendChild(closeButton);
+
+      const content = document.createElement('div');
+      content.style.cssText = `
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+      `;
+
+      presetList.forEach((preset: any) => {
+        const item = document.createElement('div');
+        item.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px;
+          margin: 4px 0;
+          background: #333333;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+          border: 2px solid transparent;
+        `;
+
+        item.addEventListener('mouseenter', () => {
+          item.style.backgroundColor = '#3a3a3a';
+          item.style.borderColor = '#4CAF50';
+        });
+
+        item.addEventListener('mouseleave', () => {
+          item.style.backgroundColor = '#333333';
+          item.style.borderColor = 'transparent';
+        });
+
+        const info = document.createElement('div');
+        info.style.cssText = `flex: 1; min-width: 0;`;
+
+        const name = document.createElement('div');
+        name.style.cssText = `
+          font-size: 16px;
+          font-weight: 600;
+          color: #ffffff;
+          margin-bottom: 4px;
+        `;
+        name.textContent = preset.title || preset.name;
+
+        const meta = document.createElement('div');
+        meta.style.cssText = `
+          font-size: 13px;
+          color: #999999;
+          line-height: 1.4;
+        `;
+
+        let metaText = `名称: ${preset.name}`;
+        if (preset.description) {
+          metaText += `\n描述: ${preset.description}`;
+        }
+        metaText += `\n更新: ${new Date(preset.updated_at).toLocaleString(
+          'zh-CN'
+        )}`;
+        metaText += ` • 大小: ${Math.round(preset.size / 1024)}KB`;
+
+        meta.style.whiteSpace = 'pre-line';
+        meta.textContent = metaText;
+
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+          display: flex;
+          gap: 8px;
+          margin-left: 16px;
+        `;
+
+        const loadBtn = document.createElement('button');
+        loadBtn.textContent = '📤 加载';
+        loadBtn.style.cssText = `
+          background: #4CAF50;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: background-color 0.2s;
+        `;
+
+        loadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.body.removeChild(overlay);
+          loadPreset(preset.name);
+        });
+
+        loadBtn.addEventListener('mouseover', () => {
+          loadBtn.style.backgroundColor = '#45a049';
+        });
+
+        loadBtn.addEventListener('mouseout', () => {
+          loadBtn.style.backgroundColor = '#4CAF50';
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.style.cssText = `
+          background: #f44336;
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.2s;
+        `;
+
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm(`确定要删除预设 "${preset.title || preset.name}" 吗？`)) {
+            document.body.removeChild(overlay);
+            deletePreset(preset.name);
+          }
+        });
+
+        deleteBtn.addEventListener('mouseover', () => {
+          deleteBtn.style.backgroundColor = '#d32f2f';
+        });
+
+        deleteBtn.addEventListener('mouseout', () => {
+          deleteBtn.style.backgroundColor = '#f44336';
+        });
+
+        actions.appendChild(loadBtn);
+        actions.appendChild(deleteBtn);
+
+        item.appendChild(info);
+        item.appendChild(actions);
+
+        // 点击整个项目也可以加载预设
+        item.addEventListener('click', () => {
+          document.body.removeChild(overlay);
+          loadPreset(preset.name);
+        });
+
+        content.appendChild(item);
+      });
+
+      modal.appendChild(header);
+      modal.appendChild(content);
+      overlay.appendChild(modal);
+
+      // 阻止点击弹框时关闭
+      modal.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      // 点击遮罩层关闭
+      overlay.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        setPresetMessage('');
+      });
+
+      document.body.appendChild(overlay);
+      setPresetMessage('');
+    } catch (error) {
+      setPresetMessage(
+        `获取预设列表失败: ${
+          error instanceof Error ? error.message : '未知错误'
+        }`
+      );
+    }
+  };
+
+  const deletePreset = async (presetName: string) => {
+    if (!confirm(`确定要删除预设 "${presetName}" 吗？此操作无法撤销。`)) {
+      return;
+    }
+
+    setPresetMessage('正在删除...');
+
+    try {
+      const response = await fetch(
+        `/api/rei/presets/delete/${encodeURIComponent(presetName)}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      setPresetMessage(`预设 "${presetName}" 删除成功`);
+
+      // 如果删除的是当前选中的预设，清空表单
+      if (selectedPreset && selectedPreset.name === presetName) {
+        setSelectedPreset(null);
+        setPresetName('');
+        setPresetTitle('');
+        setPresetDescription('');
+        setModelPaths([]);
+        setLoraPaths([]);
+        setModelLoaderNodes(['CheckpointLoaderSimple', 'UNETLoader']);
+        setLoraLoaderNodes(['LoraLoader']);
+      }
+    } catch (error) {
+      setPresetMessage(
+        `删除失败: ${error instanceof Error ? error.message : '未知错误'}`
+      );
+    }
+  };
+
+  const createNewPreset = () => {
+    setSelectedPreset(null);
+    setPresetName('');
+    setPresetTitle('');
+    setPresetDescription('');
+    setModelPaths([]);
+    setLoraPaths([]);
+    setModelLoaderNodes(['CheckpointLoaderSimple', 'UNETLoader']);
+    setLoraLoaderNodes(['LoraLoader']);
+    setPresetMessage('');
+  };
+
+  // 获取ComfyUI画布上的所有节点类型
+  const getCanvasNodeTypes = (): string[] => {
+    try {
+      const app = window.comfyUIAPP;
+      if (app && app.graph && app.graph._nodes) {
+        const nodeTypes = new Set<string>();
+        app.graph._nodes.forEach((node: any) => {
+          if (node.type) {
+            nodeTypes.add(node.type);
+          }
+        });
+        return Array.from(nodeTypes).sort();
+      }
+      return [];
+    } catch (error) {
+      console.error('获取画布节点类型失败:', error);
+      return [];
+    }
+  };
+
+  // 显示节点类型选择器
+  const showNodeTypeSelector = (
+    currentTypes: string[],
+    onSelect: (nodeType: string) => void,
+    title: string
+  ) => {
+    const canvasNodeTypes = getCanvasNodeTypes();
+
+    if (canvasNodeTypes.length === 0) {
+      setPresetMessage('当前画布上没有节点，请先添加一些节点到画布上');
+      return;
+    }
+
+    // 创建节点选择弹框
+    const overlay = document.createElement('div');
+    overlay.className = 'node-selector-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    const modal = document.createElement('div');
+    modal.className = 'node-selector-modal';
+    modal.style.cssText = `
+      background: #2b2b2b;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 500px;
+      max-height: 70%;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      color: #ffffff;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #404040;
+      background: #333333;
+      border-radius: 8px 8px 0 0;
+    `;
+
+    const titleElement = document.createElement('h3');
+    titleElement.textContent = title;
+    titleElement.style.cssText = `
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #4CAF50;
+    `;
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '×';
+    closeButton.style.cssText = `
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #ffffff;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+
+    closeButton.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+    });
+
+    closeButton.addEventListener('mouseover', () => {
+      closeButton.style.backgroundColor = '#555555';
+    });
+
+    closeButton.addEventListener('mouseout', () => {
+      closeButton.style.backgroundColor = 'transparent';
+    });
+
+    header.appendChild(titleElement);
+    header.appendChild(closeButton);
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    `;
+
+    const info = document.createElement('div');
+    info.style.cssText = `
+      padding: 12px 16px;
+      background: rgba(76, 175, 80, 0.1);
+      border: 1px solid #4CAF50;
+      border-radius: 6px;
+      margin: 8px;
+      font-size: 13px;
+      color: #4CAF50;
+    `;
+    info.textContent = `在画布上找到 ${canvasNodeTypes.length} 种节点类型，点击选择要添加的类型：`;
+
+    content.appendChild(info);
+
+    canvasNodeTypes.forEach((nodeType: string) => {
+      const isAlreadySelected = currentTypes.includes(nodeType);
+
+      const item = document.createElement('div');
+      item.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        margin: 4px 8px;
+        background: ${isAlreadySelected ? 'rgba(76, 175, 80, 0.2)' : '#333333'};
+        border-radius: 6px;
+        cursor: ${isAlreadySelected ? 'default' : 'pointer'};
+        transition: all 0.2s;
+        border: 2px solid ${isAlreadySelected ? '#4CAF50' : 'transparent'};
+      `;
+
+      if (!isAlreadySelected) {
+        item.addEventListener('mouseenter', () => {
+          item.style.backgroundColor = '#3a3a3a';
+          item.style.borderColor = '#4CAF50';
+        });
+
+        item.addEventListener('mouseleave', () => {
+          item.style.backgroundColor = '#333333';
+          item.style.borderColor = 'transparent';
+        });
+      }
+
+      const nodeInfo = document.createElement('div');
+      nodeInfo.style.cssText = `flex: 1; min-width: 0;`;
+
+      const nodeName = document.createElement('div');
+      nodeName.style.cssText = `
+        font-size: 14px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 2px;
+      `;
+      nodeName.textContent = nodeType;
+
+      const nodeStatus = document.createElement('div');
+      nodeStatus.style.cssText = `
+        font-size: 12px;
+        color: ${isAlreadySelected ? '#4CAF50' : '#999999'};
+      `;
+      nodeStatus.textContent = isAlreadySelected ? '已添加' : '点击添加';
+
+      nodeInfo.appendChild(nodeName);
+      nodeInfo.appendChild(nodeStatus);
+
+      const addButton = document.createElement('button');
+      addButton.textContent = isAlreadySelected ? '✓' : '+';
+      addButton.style.cssText = `
+        background: ${isAlreadySelected ? '#4CAF50' : '#666666'};
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: ${isAlreadySelected ? 'default' : 'pointer'};
+        font-size: 14px;
+        font-weight: bold;
+        transition: background-color 0.2s;
+        min-width: 40px;
+      `;
+
+      if (!isAlreadySelected) {
+        addButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.body.removeChild(overlay);
+          onSelect(nodeType);
+        });
+
+        addButton.addEventListener('mouseover', () => {
+          addButton.style.backgroundColor = '#4CAF50';
+        });
+
+        addButton.addEventListener('mouseout', () => {
+          addButton.style.backgroundColor = '#666666';
+        });
+
+        // 点击整个项目也可以添加
+        item.addEventListener('click', () => {
+          document.body.removeChild(overlay);
+          onSelect(nodeType);
+        });
+      } else {
+        addButton.disabled = true;
+      }
+
+      item.appendChild(nodeInfo);
+      item.appendChild(addButton);
+      content.appendChild(item);
+    });
+
+    modal.appendChild(header);
+    modal.appendChild(content);
+    overlay.appendChild(modal);
+
+    // 阻止点击弹框时关闭
+    modal.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    // 点击遮罩层关闭
+    overlay.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+    });
+
+    document.body.appendChild(overlay);
+  };
+
   const refreshParamsList = () => {
     const nodes = window.comfyUIAPP?.graph._nodes;
     const primaryNodes = nodes.filter((n: any) => n.type === 'PrimitiveNode');
@@ -52,16 +728,44 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
             const downstreamNode = window.comfyUIAPP?.graph?.getNodeById(
               link.target_id
             );
+            const targetSlot = downstreamNode.inputs[link.target_slot];
+            const valueWidget = primaryNode.widgets.find(
+              (w: any) => w.name === 'value'
+            );
+            let options = valueWidget?.options?.values || [];
             // console.log(
             //   '%c [ downstreamNode ]-52',
             //   'font-size:13px; background:pink; color:#bf2c9f;',
             //   downstreamNode
             // );
+            if (
+              (Array.isArray(modelLoaderNodes) &&
+                Array.isArray(modelPaths) &&
+                modelPaths?.length > 0 &&
+                modelLoaderNodes?.includes(downstreamNode.type)) ||
+              (Array.isArray(loraLoaderNodes) &&
+                Array.isArray(loraPaths) &&
+                loraPaths?.length > 0 &&
+                loraLoaderNodes?.includes(downstreamNode.type))
+            ) {
+              options = options.filter((option: any) => {
+                if (!option.includes('\\') && !option.includes('/')) {
+                  return true;
+                }
+                const validPath = modelPaths.find((modelPath: any) => {
+                  if (modelPath.endsWith('/')) {
+                    return option.startsWith(modelPath);
+                  } else {
+                    return option.startsWith(modelPath + '/');
+                  }
+                });
+                if (validPath) {
+                  return true;
+                }
+                return false;
+              });
+            }
 
-            const targetSlot = downstreamNode.inputs[link.target_slot];
-            const valueWidget = primaryNode.widgets.find(
-              (w: any) => w.name === 'value'
-            );
             newList.push({
               target_id: link.target_id,
               target_slot: link.target_slot,
@@ -71,7 +775,7 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
               title: downstreamNode.title,
               downstreamNode,
               primaryNode,
-              comboOptions: valueWidget?.options?.values || [],
+              comboOptions: options,
             });
 
             if (valueWidget) {
@@ -225,6 +929,12 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
           onClick={() => handleTabChange('paramFocus')}
         >
           参数聚焦
+        </button>
+        <button
+          className={`tab ${activeTab === 'presets' ? 'active' : ''}`}
+          onClick={() => handleTabChange('presets')}
+        >
+          预设管理(测试)
         </button>
         {/* <button
           className={`tab ${activeTab === 'tools' ? 'active' : ''}`}
@@ -384,7 +1094,7 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
             </div>
           </div>
         )}
-        {/* 
+
         {activeTab === 'config' && (
           <div className="config-section">
             <h3>界面设置</h3>
@@ -426,7 +1136,263 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
               </label>
             </div>
           </div>
-        )} */}
+        )}
+
+        {activeTab === 'presets' && (
+          <div className="presets-section">
+            <h3>预设管理</h3>
+
+            {presetMessage && (
+              <div
+                className={`preset-message ${
+                  presetMessage.includes('失败') ||
+                  presetMessage.includes('错误')
+                    ? 'error'
+                    : 'success'
+                }`}
+              >
+                {presetMessage}
+              </div>
+            )}
+
+            <div className="preset-controls">
+              <div className="preset-buttons">
+                <button
+                  className="preset-btn primary"
+                  onClick={createNewPreset}
+                >
+                  📄 新建预设
+                </button>
+                {/* <button
+                  className="preset-btn secondary"
+                  onClick={getCurrentWorkflowAsPreset}
+                >
+                  🔄 导入当前工作流
+                </button> */}
+                <button
+                  className="preset-btn secondary"
+                  onClick={showPresetSelector}
+                >
+                  📤 加载预设
+                </button>
+              </div>
+            </div>
+
+            <div className="preset-form">
+              <div className="form-group">
+                <label htmlFor="preset-name">预设名称:</label>
+                <input
+                  id="preset-name"
+                  type="text"
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  placeholder="输入预设名称（英文、数字、下划线）"
+                  className="preset-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="preset-title">显示标题:</label>
+                <input
+                  id="preset-title"
+                  type="text"
+                  value={presetTitle}
+                  onChange={(e) => setPresetTitle(e.target.value)}
+                  placeholder="输入显示标题（可选）"
+                  className="preset-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="preset-description">描述:</label>
+                <textarea
+                  id="preset-description"
+                  value={presetDescription}
+                  onChange={(e) => setPresetDescription(e.target.value)}
+                  placeholder="输入预设描述（可选）"
+                  className="preset-textarea"
+                  rows={2}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>模型加载限制路径:</label>
+                <div className="path-list">
+                  {modelPaths.map((path, index) => (
+                    <div key={index} className="path-item">
+                      <span className="path-text">{path}</span>
+                      <button
+                        type="button"
+                        className="path-remove"
+                        onClick={() =>
+                          setModelPaths(
+                            modelPaths.filter((_, i) => i !== index)
+                          )
+                        }
+                        title="移除路径"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="path-add"
+                    onClick={async () => {
+                      try {
+                        const result =
+                          await FileSelector.selectModelDirectory();
+                        if (!modelPaths.includes(result.path)) {
+                          let splitter = '/';
+                          if (result.path.includes('\\')) {
+                            splitter = '\\';
+                          }
+                          let temp = result.path.split(splitter);
+                          if (temp.length > 1) {
+                            temp = temp.slice(1);
+                          }
+                          setModelPaths([...modelPaths, temp.join(splitter)]);
+                        }
+                      } catch (error) {
+                        console.log('用户取消了路径选择');
+                      }
+                    }}
+                  >
+                    📁 添加模型路径
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Lora加载限制路径:</label>
+                <div className="path-list">
+                  {loraPaths.map((path, index) => (
+                    <div key={index} className="path-item">
+                      <span className="path-text">{path}</span>
+                      <button
+                        type="button"
+                        className="path-remove"
+                        onClick={() =>
+                          setLoraPaths(loraPaths.filter((_, i) => i !== index))
+                        }
+                        title="移除路径"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="path-add"
+                    onClick={async () => {
+                      try {
+                        const result = await FileSelector.selectLoraDirectory();
+                        if (!loraPaths.includes(result.path)) {
+                          setLoraPaths([...loraPaths, result.path]);
+                        }
+                      } catch (error) {
+                        console.log('用户取消了路径选择');
+                      }
+                    }}
+                  >
+                    📁 添加Lora路径
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>模型加载节点类型:</label>
+                <div className="node-list">
+                  {modelLoaderNodes.map((nodeType, index) => (
+                    <div key={index} className="node-item">
+                      <span className="node-text">{nodeType}</span>
+                      <button
+                        type="button"
+                        className="node-remove"
+                        onClick={() =>
+                          setModelLoaderNodes(
+                            modelLoaderNodes.filter((_, i) => i !== index)
+                          )
+                        }
+                        title="移除节点类型"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="node-add"
+                    onClick={() =>
+                      showNodeTypeSelector(
+                        modelLoaderNodes,
+                        (nodeType) => {
+                          if (!modelLoaderNodes.includes(nodeType)) {
+                            setModelLoaderNodes([
+                              ...modelLoaderNodes,
+                              nodeType,
+                            ]);
+                            setPresetMessage(`已添加模型加载节点: ${nodeType}`);
+                          }
+                        },
+                        '选择模型加载节点类型'
+                      )
+                    }
+                  >
+                    🎯 添加模型加载节点
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Lora加载节点类型:</label>
+                <div className="node-list">
+                  {loraLoaderNodes.map((nodeType, index) => (
+                    <div key={index} className="node-item">
+                      <span className="node-text">{nodeType}</span>
+                      <button
+                        type="button"
+                        className="node-remove"
+                        onClick={() =>
+                          setLoraLoaderNodes(
+                            loraLoaderNodes.filter((_, i) => i !== index)
+                          )
+                        }
+                        title="移除节点类型"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="node-add"
+                    onClick={() =>
+                      showNodeTypeSelector(
+                        loraLoaderNodes,
+                        (nodeType) => {
+                          if (!loraLoaderNodes.includes(nodeType)) {
+                            setLoraLoaderNodes([...loraLoaderNodes, nodeType]);
+                            setPresetMessage(`已添加Lora加载节点: ${nodeType}`);
+                          }
+                        },
+                        '选择Lora加载节点类型'
+                      )
+                    }
+                  >
+                    🎨 添加Lora加载节点
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button className="preset-btn primary" onClick={savePreset}>
+                  💾 保存预设
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {activeTab === 'info' && (
           <div className="info-section">

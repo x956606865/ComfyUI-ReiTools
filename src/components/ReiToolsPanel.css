@@ -592,3 +592,416 @@
 }
 
 /* 移除重复的CSS定义，使用上面的grid布局 */
+
+/* 文件选择器演示页面样式 */
+.file-selector-section {
+  padding: 16px;
+}
+
+.demo-section {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.demo-controls {
+  margin-bottom: 20px;
+}
+
+.demo-button {
+  background: var(--accent-color, #4CAF50);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-button:hover {
+  background: var(--accent-hover-color, #45a049);
+}
+
+.selected-result {
+  background: var(--bg-secondary, #333333);
+  border: 1px solid var(--border-color, #555555);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.selected-result h4 {
+  margin: 0 0 12px 0;
+  color: var(--accent-color, #4CAF50);
+  font-size: 14px;
+}
+
+.selected-result p {
+  margin: 6px 0;
+  font-size: 13px;
+  color: var(--text-color, #ffffff);
+  word-break: break-all;
+}
+
+.demo-explanation {
+  margin-bottom: 20px;
+}
+
+.demo-explanation h4,
+.demo-api h4 {
+  margin: 0 0 12px 0;
+  color: var(--text-color, #ffffff);
+  font-size: 14px;
+}
+
+.demo-explanation ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.demo-explanation li {
+  margin: 8px 0;
+  font-size: 13px;
+  color: var(--text-secondary, #cccccc);
+  line-height: 1.4;
+}
+
+.code-block {
+  background: var(--bg-code, #1e1e1e);
+  border: 1px solid var(--border-color, #555555);
+  border-radius: 4px;
+  padding: 12px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--text-code, #d4d4d4);
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 预设管理样式 */
+.presets-section {
+  padding: 0;
+}
+
+.presets-section h3 {
+  margin: 0 0 16px 0;
+  color: #4CAF50;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.preset-message {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.preset-message.success {
+  background: rgba(76, 175, 80, 0.2);
+  border: 1px solid #4CAF50;
+  color: #4CAF50;
+}
+
+.preset-message.error {
+  background: rgba(244, 67, 54, 0.2);
+  border: 1px solid #f44336;
+  color: #f44336;
+}
+
+.preset-controls {
+  margin-bottom: 20px;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preset-btn.primary {
+  background: #4CAF50;
+  color: white;
+}
+
+.preset-btn.primary:hover:not(:disabled) {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.preset-btn.secondary {
+  background: #2196F3;
+  color: white;
+}
+
+.preset-btn.secondary:hover:not(:disabled) {
+  background: #1976D2;
+  transform: translateY(-1px);
+}
+
+.preset-btn:not(.primary):not(.secondary) {
+  background: #666666;
+  color: white;
+}
+
+.preset-btn:not(.primary):not(.secondary):hover:not(:disabled) {
+  background: #777777;
+  transform: translateY(-1px);
+}
+
+.preset-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.preset-form {
+  background: #333333;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #404040;
+  margin-top: 8px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #cccccc;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.preset-input, .preset-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: #2a2a2a;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.preset-input:focus, .preset-textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.preset-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* 路径列表样式 */
+.path-list {
+  background: #2a2a2a;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  padding: 12px;
+  min-height: 120px;
+}
+
+.path-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: #333333;
+  border-radius: 4px;
+  border: 1px solid #404040;
+  transition: all 0.2s;
+}
+
+.path-item:hover {
+  background: #3a3a3a;
+  border-color: #4CAF50;
+}
+
+.path-text {
+  flex: 1;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #ffffff;
+  word-break: break-all;
+  margin-right: 12px;
+  line-height: 1.3;
+}
+
+.path-remove {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
+.path-remove:hover {
+  background: #d32f2f;
+}
+
+.path-add {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.path-add:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.path-list:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  font-style: italic;
+}
+
+.path-list:empty::before {
+  content: "暂无路径，点击下方按钮添加";
+}
+
+/* 节点列表样式 */
+.node-list {
+  background: #2a2a2a;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  padding: 12px;
+  min-height: 80px;
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: #333333;
+  border-radius: 4px;
+  border: 1px solid #404040;
+  transition: all 0.2s;
+}
+
+.node-item:hover {
+  background: #3a3a3a;
+  border-color: #2196F3;
+}
+
+.node-text {
+  flex: 1;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: 500;
+  margin-right: 12px;
+  line-height: 1.3;
+}
+
+.node-remove {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
+.node-remove:hover {
+  background: #d32f2f;
+}
+
+.node-add {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.node-add:hover {
+  background: #1976D2;
+  transform: translateY(-1px);
+}
+
+.node-list:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  font-style: italic;
+}
+
+.node-list:empty::before {
+  content: "暂无节点类型，点击下方按钮添加";
+}
+
+.form-actions {
+  margin-top: 20px;
+}
+
+/* 预设选择器弹框样式在JavaScript中动态定义 */
