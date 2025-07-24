@@ -758,17 +758,16 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                   const modelPathArray = modelPath.split(pathSplitter);
 
                   const newPath = modelPathArray.slice(1).join(pathSplitter);
-                  if (newPath.endsWith(pathSplitter)) {
-                    return option.startsWith(newPath);
-                  } else {
-                    return option.startsWith(newPath + pathSplitter);
-                  }
+                  return (
+                    option.startsWith(newPath + '/') ||
+                    option.startsWith(newPath + '\\')
+                  );
                 });
-                console.log(
-                  '%c [ validPath ]-756',
-                  'font-size:13px; background:pink; color:#bf2c9f;',
-                  validPath
-                );
+                // console.log(
+                //   '%c [ validPath ]-756',
+                //   'font-size:13px; background:pink; color:#bf2c9f;',
+                //   validPath
+                // );
 
                 if (validPath) {
                   return true;
