@@ -141,6 +141,8 @@ PS：做了节点改动或者 PrimitiveNode 连接了其他的节点后什么的
     - [Rei 自定义下拉框 (ReiCustomSelector)](#rei-自定义下拉框-reicustomselector)
   - [Rei 图片元数据加载器 (ReiImageMetadataLoader)](#rei-图片元数据加载器-reiimageMetadataloader)
   - [Rei 元数据解析器 (ReiMetadataParser)](#rei-元数据解析器-reimetadataparser)
+  - [Rei 文件夹选择器 (ReiFolderSelector)](#rei-文件夹选择器-reifolderselector)
+  - [Rei 文件计数器 (ReiFileCounter)](#rei-文件计数器-reifilecounter)
 - [📸 截图演示](#-截图演示)
   - [配置管理器界面](#配置管理器界面)
   - [Prompt 文件选择器](#prompt-文件选择器)
@@ -586,6 +588,58 @@ PS：做了节点改动或者 PrimitiveNode 连接了其他的节点后什么的
 2. **工作流集成**：将解析的参数用于自动化工作流
 3. **批量分析**：处理大量 WebUI 格式的参数文本
 4. **参数验证**：检查和验证参数的完整性
+
+</details>
+
+---
+
+### Rei 文件夹选择器 (ReiFolderSelector)
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
+
+一个简单易用的文件夹选择器节点，通过点击按钮弹出文件夹选择器，选择后返回文件夹的绝对路径。适合用于 comfyui 服务和本机不是同一台机器的情况，可以直接选取到宿主机的文件夹
+
+**输入**：
+
+- `folder_path` (`STRING`): 显示选中的文件夹路径（只读）
+
+**输出**：
+
+- `folder_path` (`STRING`): 选中文件夹的绝对路径
+
+**使用方法**：
+
+1. **添加节点**：在 ComfyUI 中添加"Rei 文件夹选择器"节点
+2. **点击按钮**：点击节点上的"📁 选择文件夹"按钮
+3. **浏览选择**：在弹出的文件夹选择器中浏览并选择目标文件夹
+   - 点击文件夹名称选中
+   - 双击文件夹进入子目录
+   - 点击"⬆️ 返回上级目录"返回上一级
+4. **确认选择**：点击"确认选择"按钮完成选择
+5. **获取路径**：节点输出选中文件夹的绝对路径
+
+</details>
+
+---
+
+### Rei 文件计数器 (ReiFileCounter)
+
+<details>
+<summary><strong>查看详细介绍和使用方法</strong></summary>
+
+一个智能的文件统计节点，可以统计指定目录下特定后缀的文件数量，并动态生成文件后缀下拉框选项。
+
+**输入**：
+
+- `directory_path` (`STRING`): 要统计的目录路径（只读，通过按钮选择）
+- `file_extension` (`STRING`): 文件后缀（动态下拉框，自动生成选项）
+
+**输出**：
+
+- `file_count` (`INT`): 匹配的文件数量
+- `available_extensions` (`STRING`): 可用文件后缀列表（JSON 格式）
+- `selected_files` (`STRING`): 匹配的文件路径列表（JSON 格式）
 
 </details>
 

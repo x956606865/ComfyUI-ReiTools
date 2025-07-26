@@ -2,6 +2,11 @@ import { ReiToolsPanel } from './components/ReiToolsPanel';
 import { FloatingPanel } from './components/FloatingPanel';
 import { isComfyUILoaded } from './utils/comfyui';
 import { loadPanelConfig, savePanelConfig } from './utils/storage';
+import {
+  selectDirectory,
+  selectFile,
+  FileSelector,
+} from './utils/fileSelector';
 
 // 全局状态管理
 class ReiToolsManager {
@@ -226,17 +231,25 @@ export const ReiToolsAPI = {
   toggle: () => reiToolsManager?.togglePanel(),
   show: () => reiToolsManager?.showPanel(),
   hide: () => reiToolsManager?.hidePanel(),
+  // 文件选择器API
+  selectDirectory,
+  selectFile,
+  FileSelector,
 };
 
 // 导出组件供直接使用
 export { ReiToolsPanel, FloatingPanel };
 export * from './utils/comfyui';
 export * from './utils/storage';
+export * from './utils/fileSelector';
 
 // 自动初始化（如果环境支持）
 if (typeof window !== 'undefined') {
   // 设置全局API
   window.ReiToolsUI = ReiToolsAPI;
+
+  // 设置文件选择器全局API（向后兼容）
+  window.ReiFileSelector = FileSelector;
 
   // 当DOM加载完成后自动初始化
   if (document.readyState === 'loading') {

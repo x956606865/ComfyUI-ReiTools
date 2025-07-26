@@ -6,6 +6,8 @@ from .ReiConfigReader import ReiConfigLoader
 from .Rei3KeyGroupLoader import Rei3KeyGroupLoader
 from .ReiImageMetadataLoader import ReiImageMetadataLoader
 from .ReiMetadataParser import ReiMetadataParser
+from .ReiFolderSelector import ReiFolderSelector
+from .ReiFileCounter import ReiFileCounter
 
 NODE_CLASS_MAPPINGS = {
     "ReiCustomSelector": ReiCustomSelector,
@@ -16,6 +18,8 @@ NODE_CLASS_MAPPINGS = {
     "Rei3KeyGroupLoader": Rei3KeyGroupLoader,
     "ReiImageMetadataLoader": ReiImageMetadataLoader,
     "ReiMetadataParser": ReiMetadataParser,
+    "ReiFolderSelector": ReiFolderSelector,
+    "ReiFileCounter": ReiFileCounter,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -26,7 +30,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # "ReiConfigManager": "Rei 配置管理器",
     "Rei3KeyGroupLoader": "Rei 三键组合加载器",
     "ReiImageMetadataLoader": "Rei 图片元数据加载器(测试)",
-    "ReiMetadataParser": "Rei 参数解析器(测试)"
+    "ReiMetadataParser": "Rei 参数解析器(测试)",
+    "ReiFolderSelector": "Rei 宿主机文件夹选择器(测试)",
+    "ReiFileCounter": "Rei 文件计数器",
 }
 
 

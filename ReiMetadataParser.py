@@ -42,7 +42,7 @@ class ReiMetadataParser:
     )
     
     FUNCTION = "parse_parameters"
-    CATEGORY = "ReiTools"
+    CATEGORY = "ReiTools/Test"
     def parse_parameters_function(self,parameters_text):
         """解析WebUI参数文本"""
         target={

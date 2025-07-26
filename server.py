@@ -239,7 +239,7 @@ async def delete_preset(request):
 
 @routes.get('/api/rei/filesystem/browse')
 async def browse_filesystem(request):
-    """浏览ComfyUI文件系统"""
+    """浏览ComfyUI文件系统（受限制版本）"""
     try:
         # 获取查询参数
         path = request.query.get('path', '')
@@ -485,6 +485,8 @@ async def browse_filesystem(request):
             "base_path": os.path.basename(actual_base_path),
             "base_dir": base_dir_cleaned,  # 新增：返回当前使用的base目录
             "comfyui_root": os.path.basename(comfyui_root),  # 新增：返回ComfyUI根目录信息
+            "comfyui_root_path": os.path.abspath(comfyui_root),  # 新增：返回ComfyUI根目录的完整路径
+            "actual_base_path": os.path.abspath(actual_base_path),  # 新增：返回实际base路径
             "current_time": datetime.now().isoformat()
         }
         
@@ -496,6 +498,327 @@ async def browse_filesystem(request):
         traceback.print_exc()
         return web.json_response(
             {"error": f"浏览文件系统失败: {str(e)}"}, 
+            status=500
+        )
+
+@routes.get('/api/rei/filesystem/browse-system')
+async def browse_system_filesystem(request):
+    """浏览系统文件系统（从根目录开始，用于文件夹选择器）"""
+    try:
+        import platform
+        import os
+        
+        # 获取查询参数
+        path = request.query.get('path', '')
+        show_files = request.query.get('show_files', 'true').lower() == 'true'
+        file_types = request.query.get('file_types', '').split(',') if request.query.get('file_types') else []
+        
+        # 根据操作系统确定根目录
+        system = platform.system().lower()
+        if system == 'windows':
+            # Windows: 从盘符开始
+            if not path:
+                # 返回所有可用盘符
+                import string
+                drives = []
+                for letter in string.ascii_uppercase:
+                    drive_path = f"{letter}:\\"
+                    if os.path.exists(drive_path):
+                        try:
+                            drive_stat = os.stat(drive_path)
+                            drives.append({
+                                "name": f"{letter}:",
+                                "path": f"{letter}:",
+                                "type": "directory",
+                                "modified": drive_stat.st_mtime,
+                                "created": drive_stat.st_ctime,
+                                "is_readable": os.access(drive_path, os.R_OK),
+                                "children_count": 0,  # 暂时设为0，实际使用时可以计算
+                                "icon": "💾"
+                            })
+                        except (OSError, PermissionError):
+                            continue
+                
+                return web.json_response({
+                    "type": "directory",
+                    "name": "系统驱动器",
+                    "path": "",
+                    "parent_path": None,
+                    "items": drives,
+                    "breadcrumbs": [{"name": "系统驱动器", "path": "", "is_base": True}],
+                    "total_items": len(drives),
+                    "total_files": 0,
+                    "total_directories": len(drives),
+                    "base_path": "系统根目录",
+                    "system_type": "windows",
+                    "current_time": datetime.now().isoformat()
+                })
+            else:
+                # Windows: 处理具体路径
+                target_path = path
+                if not os.path.exists(target_path):
+                    return web.json_response({"error": "路径不存在"}, status=404)
+        else:
+            # Linux/macOS: 从根目录开始
+            if not path:
+                target_path = "/"
+            else:
+                target_path = path
+                if not target_path.startswith('/'):
+                    target_path = '/' + target_path
+                if not os.path.exists(target_path):
+                    return web.json_response({"error": "路径不存在"}, status=404)
+        
+        # 检查路径是否存在
+        if not os.path.exists(target_path):
+            return web.json_response({"error": "路径不存在"}, status=404)
+        
+        # 如果是文件，返回文件信息
+        if os.path.isfile(target_path):
+            file_stat = os.stat(target_path)
+            file_extension = os.path.splitext(target_path)[1].lower().lstrip('.')
+            
+            file_info = {
+                "type": "file",
+                "name": os.path.basename(target_path),
+                "path": target_path,
+                "size": file_stat.st_size,
+                "modified": file_stat.st_mtime,
+                "created": file_stat.st_ctime,
+                "extension": file_extension,
+                "is_readable": os.access(target_path, os.R_OK),
+                "is_writable": os.access(target_path, os.W_OK)
+            }
+            return web.json_response(file_info)
+        
+        # 读取目录内容
+        items = []
+        try:
+            dir_entries = []
+            
+            # 收集所有条目
+            for item_name in os.listdir(target_path):
+                # 跳过隐藏文件和特殊目录（但保留系统目录）
+                if item_name.startswith('.') and system != 'windows':
+                    continue
+                
+                item_path = os.path.join(target_path, item_name)
+                
+                try:
+                    item_stat = os.stat(item_path)
+                    
+                    item_info = {
+                        "name": item_name,
+                        "path": item_path,
+                        "modified": item_stat.st_mtime,
+                        "created": item_stat.st_ctime,
+                        "is_readable": os.access(item_path, os.R_OK),
+                    }
+                    
+                    if os.path.isdir(item_path):
+                        item_info["type"] = "directory"
+                        item_info["icon"] = "📁"
+                        
+                        # 计算子目录和文件数量
+                        try:
+                            children = os.listdir(item_path)
+                            item_info["children_count"] = len(children)
+                            
+                            file_count = 0
+                            dir_count = 0
+                            for child in children:
+                                child_path = os.path.join(item_path, child)
+                                if os.path.isdir(child_path):
+                                    dir_count += 1
+                                else:
+                                    file_count += 1
+                            
+                            item_info["file_count"] = file_count
+                            item_info["dir_count"] = dir_count
+                        except (OSError, PermissionError):
+                            item_info["children_count"] = 0
+                            item_info["file_count"] = 0
+                            item_info["dir_count"] = 0
+                    else:
+                        if not show_files:
+                            continue
+                        
+                        item_info["type"] = "file"
+                        file_extension = os.path.splitext(item_path)[1].lower().lstrip('.')
+                        item_info["size"] = item_stat.st_size
+                        item_info["extension"] = file_extension
+                        item_info["is_writable"] = os.access(item_path, os.W_OK)
+                        
+                        # 设置文件图标
+                        if file_extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']:
+                            item_info["icon"] = "🖼️"
+                        elif file_extension in ['mp4', 'avi', 'mov', 'mkv', 'wmv']:
+                            item_info["icon"] = "🎬"
+                        elif file_extension in ['mp3', 'wav', 'flac', 'aac']:
+                            item_info["icon"] = "🎵"
+                        elif file_extension in ['pdf']:
+                            item_info["icon"] = "📄"
+                        elif file_extension in ['doc', 'docx']:
+                            item_info["icon"] = "📝"
+                        elif file_extension in ['xls', 'xlsx']:
+                            item_info["icon"] = "📊"
+                        elif file_extension in ['zip', 'rar', '7z', 'tar', 'gz']:
+                            item_info["icon"] = "📦"
+                        elif file_extension in ['py', 'js', 'ts', 'java', 'cpp', 'c']:
+                            item_info["icon"] = "💻"
+                        else:
+                            item_info["icon"] = "📄"
+                    
+                    dir_entries.append(item_info)
+                    
+                except (OSError, PermissionError):
+                    # 跳过无法访问的文件/目录
+                    continue
+            
+            # 排序：目录优先，然后按名称排序
+            dir_entries.sort(key=lambda x: (x["type"] != "directory", x["name"].lower()))
+            items = dir_entries
+        
+        except PermissionError:
+            return web.json_response(
+                {"error": "权限不足，无法访问该目录"}, 
+                status=403
+            )
+        
+        # 构建父级路径
+        parent_path = None
+        if system == 'windows':
+            if target_path and target_path != "\\" and len(target_path) > 3:
+                parent_path = os.path.dirname(target_path)
+                if not parent_path:
+                    parent_path = None
+        else:
+            if target_path and target_path != "/":
+                parent_path = os.path.dirname(target_path)
+                if not parent_path:
+                    parent_path = "/"
+
+        # 构建面包屑导航
+        breadcrumbs = []
+        
+        if system == 'windows':
+            if target_path:
+                parts = target_path.split('\\')
+                current_path = ""
+                for part in parts:
+                    if part:
+                        current_path = os.path.join(current_path, part) if current_path else part
+                        breadcrumbs.append({
+                            "name": part,
+                            "path": current_path,
+                            "is_base": False
+                        })
+        else:
+            if target_path and target_path != "/":
+                parts = target_path.split('/')
+                current_path = ""
+                for part in parts:
+                    if part:
+                        current_path = os.path.join(current_path, part) if current_path else part
+                        breadcrumbs.append({
+                            "name": part,
+                            "path": "/" + current_path,
+                            "is_base": False
+                        })
+
+        # 确定显示名称
+        if target_path:
+            display_name = os.path.basename(target_path) if os.path.basename(target_path) else target_path
+        else:
+            display_name = "系统根目录"
+
+        response_data = {
+            "type": "directory", 
+            "name": display_name,
+            "path": target_path,
+            "parent_path": parent_path,
+            "items": items,
+            "breadcrumbs": breadcrumbs,
+            "total_items": len(items),
+            "total_files": len([x for x in items if x["type"] == "file"]),
+            "total_directories": len([x for x in items if x["type"] == "directory"]),
+            "base_path": "系统根目录",
+            "system_type": system,
+            "current_time": datetime.now().isoformat()
+        }
+        
+        return web.json_response(response_data)
+        
+    except Exception as e:
+        print(f"[ReiConfig] 浏览系统文件系统失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return web.json_response(
+            {"error": f"浏览系统文件系统失败: {str(e)}"}, 
+            status=500
+        )
+
+@routes.get('/api/rei/filesystem/get-extensions')
+async def get_directory_extensions(request):
+    """获取指定目录下的所有文件后缀列表"""
+    try:
+        directory_path = request.query.get('path', '')
+        
+        if not directory_path or not directory_path.strip():
+            return web.json_response(
+                {"error": "目录路径不能为空"}, 
+                status=400
+            )
+        
+        # 规范化路径
+        directory_path = os.path.abspath(directory_path.strip())
+        
+        # 检查目录是否存在
+        if not os.path.exists(directory_path):
+            return web.json_response(
+                {"error": f"目录不存在: {directory_path}"}, 
+                status=404
+            )
+        
+        if not os.path.isdir(directory_path):
+            return web.json_response(
+                {"error": f"路径不是目录: {directory_path}"}, 
+                status=400
+            )
+        
+        # 统计所有文件后缀
+        extension_count = {}
+        total_files = 0
+        
+        for root, dirs, files in os.walk(directory_path):
+            for file in files:
+                total_files += 1
+                _, ext = os.path.splitext(file)
+                ext = ext.lower().lstrip('.')  # 移除点号并转为小写
+                if ext:  # 只统计有后缀的文件
+                    extension_count[ext] = extension_count.get(ext, 0) + 1
+        
+        # 生成可用后缀列表（按数量排序）
+        available_extensions = sorted(extension_count.keys(), 
+                                    key=lambda x: extension_count[x], 
+                                    reverse=True)
+        
+        return web.json_response({
+            'directory_path': directory_path,
+            'total_files': total_files,
+            'extensions': available_extensions,
+            'extension_counts': extension_count
+        })
+        
+    except PermissionError:
+        return web.json_response(
+            {"error": f"没有权限访问目录: {directory_path}"}, 
+            status=403
+        )
+    except Exception as e:
+        print(f"[ReiConfig] 获取文件后缀失败: {e}")
+        return web.json_response(
+            {"error": f"获取文件后缀失败: {str(e)}"}, 
             status=500
         )
 

@@ -28,7 +28,7 @@ class ReiImageMetadataLoader:
     RETURN_NAMES = ("image", "positive_prompt", "negative_prompt", "parameters", "workflow", "raw_metadata", "parsed_params")
     
     FUNCTION = "load_image_metadata"
-    CATEGORY = "ReiTools"
+    CATEGORY = "ReiTools/Test"
     
     def load_image_metadata(self, image):
         """加载图片并提取元数据"""

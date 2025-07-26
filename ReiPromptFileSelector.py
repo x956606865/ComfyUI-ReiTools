@@ -34,7 +34,7 @@ class ReiPromptFileSelector:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "load_text"
-    CATEGORY = "Rei"
+    CATEGORY = "ReiTools"
  
     def load_text(self, filename):
         file_path = os.path.join(self.PROMPTS_DIR, filename + ".txt")

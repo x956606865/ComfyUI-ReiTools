@@ -37,7 +37,7 @@ class ReiConfigLoader:
 
     FUNCTION = "load_value"
 
-    CATEGORY = "Rei"
+    CATEGORY = "ReiTools"
 
     def load_value(self, config_key, **kwargs):
         """

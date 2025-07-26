@@ -59,6 +59,29 @@ export interface ReiToolsConfig {
         };
     };
 }
+export interface FileSelectOptions {
+    mode?: 'file' | 'directory' | 'both';
+    title?: string;
+    allowedExtensions?: string[];
+    initialPath?: string;
+    baseDir?: string;
+}
+export interface FileSelectResult {
+    path: string;
+    type: 'file' | 'directory';
+    name: string;
+}
+export interface FileSelector {
+    create: (options?: FileSelectOptions) => Promise<FileSelectResult>;
+    selectFile: (allowedExtensions?: string[]) => Promise<FileSelectResult>;
+    selectDirectory: (baseDir?: string) => Promise<FileSelectResult>;
+    selectModelDirectory: () => Promise<FileSelectResult>;
+    selectLoraDirectory: () => Promise<FileSelectResult>;
+    selectImage: () => Promise<FileSelectResult>;
+    selectTextFile: () => Promise<FileSelectResult>;
+    selectPythonFile: () => Promise<FileSelectResult>;
+    fetchFileSystemData: (path?: string, showFiles?: boolean) => Promise<any>;
+}
 declare global {
     interface Window {
         app?: ComfyUIApp;
@@ -66,6 +89,7 @@ declare global {
         React?: any;
         ReactDOM?: any;
         ReiToolsUI?: any;
+        ReiFileSelector?: FileSelector;
         [key: string]: any;
     }
 }
