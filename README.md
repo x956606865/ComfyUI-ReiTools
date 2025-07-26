@@ -154,11 +154,10 @@ PS：做了节点改动或者 PrimitiveNode 连接了其他的节点后什么的
 
 1. 打开终端或命令行界面
 2. 导航到 ComfyUI 安装目录下的 `custom_nodes` 文件夹：
+
    ```bash
    cd ComfyUI/custom_nodes/
    ```
-
-````
 
 3. 克隆本仓库：
    ```bash
@@ -633,4 +632,7 @@ PS：做了节点改动或者 PrimitiveNode 连接了其他的节点后什么的
 ---
 
 希望这些工具能对你的 ComfyUI 工作流有所帮助！ 🎉
-````
+
+```
+
+```
