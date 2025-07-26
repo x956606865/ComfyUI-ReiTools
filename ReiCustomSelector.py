@@ -30,7 +30,7 @@ class ReiCustomSelector:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("value",)
     FUNCTION = "process"
-    CATEGORY = "Rei Tools"
+    CATEGORY = "ReiTools"
     
     
     def __init__(self):

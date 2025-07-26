@@ -20,7 +20,7 @@ class ReiConfigManager:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("result",)
     FUNCTION = "manage_config"
-    CATEGORY = "Rei Tools"
+    CATEGORY = "ReiTools"
     OUTPUT_NODE = True
 
     def manage_config(self, action, key="", value="", value_type="string"):

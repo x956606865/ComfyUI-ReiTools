@@ -48,6 +48,33 @@ export interface ReiToolsConfig {
   };
 }
 
+// 文件选择器相关类型
+export interface FileSelectOptions {
+  mode?: 'file' | 'directory' | 'both';
+  title?: string;
+  allowedExtensions?: string[];
+  initialPath?: string;
+  baseDir?: string;
+}
+
+export interface FileSelectResult {
+  path: string;
+  type: 'file' | 'directory';
+  name: string;
+}
+
+export interface FileSelector {
+  create: (options?: FileSelectOptions) => Promise<FileSelectResult>;
+  selectFile: (allowedExtensions?: string[]) => Promise<FileSelectResult>;
+  selectDirectory: (baseDir?: string) => Promise<FileSelectResult>;
+  selectModelDirectory: () => Promise<FileSelectResult>;
+  selectLoraDirectory: () => Promise<FileSelectResult>;
+  selectImage: () => Promise<FileSelectResult>;
+  selectTextFile: () => Promise<FileSelectResult>;
+  selectPythonFile: () => Promise<FileSelectResult>;
+  fetchFileSystemData: (path?: string, showFiles?: boolean) => Promise<any>;
+}
+
 // 全局变量类型声明
 declare global {
   interface Window {
@@ -56,6 +83,7 @@ declare global {
     React?: any;
     ReactDOM?: any;
     ReiToolsUI?: any;
+    ReiFileSelector?: FileSelector;
     [key: string]: any;
   }
 }

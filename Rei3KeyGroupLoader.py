@@ -48,7 +48,7 @@ class Rei3KeyGroupLoader:
     RETURN_TYPES = ("STRING", "STRING", "STRING")
     RETURN_NAMES = ("value1", "value2", "value3")
     FUNCTION = "load_key_group"
-    CATEGORY = "Rei Tools"
+    CATEGORY = "ReiTools"
 
     def load_key_group(self, group_key: str, **kwargs) -> tuple:
         """

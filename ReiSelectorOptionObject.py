@@ -25,7 +25,7 @@ class ReiSelectorOptionObject:
     RETURN_TYPES =("REI_SELECTOR_OPTION_OBJECT",)
     RETURN_NAMES = ("rei_selector_option_object",)
     FUNCTION = "process"
-    CATEGORY = "Rei Tools"
+    CATEGORY = "ReiTools"
     
     def __init__(self):
         self.name = ""
