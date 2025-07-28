@@ -19,6 +19,13 @@ class ReiFileCounter:
                 }),
                 "file_extension": (["-- No Options Connected --"],),
             },
+            "optional": {
+                "initial_directory": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "placeholder": "可选：指定文件选择器的起始目录..."
+                }),
+            },
             "hidden": {
                 "unique_id": "UNIQUE_ID"
             }
@@ -35,13 +42,14 @@ class ReiFileCounter:
     FUNCTION = "count_files"
     CATEGORY = "Rei Tools"
     
-    def count_files(self, directory_path: str, file_extension: str, unique_id=None):
+    def count_files(self, directory_path: str, file_extension: str, unique_id=None, **kwargs):
         """
         统计指定目录下特定后缀的文件数量
         
         Args:
             directory_path: 目录路径
             file_extension: 文件后缀（不包含点号）
+            **kwargs: 其他可选参数（如initial_directory）
             
         Returns:
             file_count: 文件数量

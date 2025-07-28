@@ -77,10 +77,12 @@ export interface FileSelector {
     selectDirectory: (baseDir?: string) => Promise<FileSelectResult>;
     selectModelDirectory: () => Promise<FileSelectResult>;
     selectLoraDirectory: () => Promise<FileSelectResult>;
+    selectSystemDirectory: (initialPath?: string) => Promise<FileSelectResult>;
     selectImage: () => Promise<FileSelectResult>;
     selectTextFile: () => Promise<FileSelectResult>;
     selectPythonFile: () => Promise<FileSelectResult>;
     fetchFileSystemData: (path?: string, showFiles?: boolean) => Promise<any>;
+    fetchSystemFileSystemData: (path?: string, showFiles?: boolean) => Promise<any>;
 }
 declare global {
     interface Window {

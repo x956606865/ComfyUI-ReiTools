@@ -727,7 +727,8 @@ async function createNativeSystemFileSelector(
   } = options;
 
   // 状态变量
-  let currentPath = initialPath;
+  // 如果有initialPath，使用它作为起始路径，否则从系统根目录开始
+  let currentPath = initialPath || '';
   let selectedItem: FileItem | null = null;
   let parentPath: string | null = null;
 
@@ -1321,12 +1322,15 @@ export async function selectLoraDirectory(): Promise<FileSelectResult> {
 }
 
 /**
- * 选择系统文件夹 (从系统根目录开始)
+ * 选择系统文件夹 (从系统根目录开始，或从指定路径开始)
  */
-export async function selectSystemDirectory(): Promise<FileSelectResult> {
+export async function selectSystemDirectory(
+  initialPath?: string
+): Promise<FileSelectResult> {
   return createSystemFileSelector({
     mode: 'directory',
     title: '选择系统文件夹',
+    initialPath: initialPath || '',
   });
 }
 

@@ -49,9 +49,9 @@ export declare function selectModelDirectory(): Promise<FileSelectResult>;
  */
 export declare function selectLoraDirectory(): Promise<FileSelectResult>;
 /**
- * 选择系统文件夹 (从系统根目录开始)
+ * 选择系统文件夹 (从系统根目录开始，或从指定路径开始)
  */
-export declare function selectSystemDirectory(): Promise<FileSelectResult>;
+export declare function selectSystemDirectory(initialPath?: string): Promise<FileSelectResult>;
 /**
  * 选择图片文件
  */
