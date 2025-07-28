@@ -111,9 +111,12 @@ app.registerExtension({
 
       // 等待一个周期确保widgets已经初始化
       setTimeout(() => {
-        // 查找folder_path输入框
+        // 查找输入框
         const folderPathWidget = node.widgets?.find(
           (w) => w.name === 'folder_path'
+        );
+        const initialDirectoryWidget = node.widgets?.find(
+          (w) => w.name === 'initial_directory'
         );
 
         if (!folderPathWidget) {
@@ -149,9 +152,55 @@ app.registerExtension({
 
               console.log('[ReiFolderSelector] 使用全局文件选择器API');
 
-              // 使用全局暴露的系统文件选择器（从系统根目录开始）
-              const result =
-                await window.ReiFileSelector.selectSystemDirectory();
+              // 获取initial_directory的值，优先从连线获取，其次从widget获取
+              let initialPath = '';
+
+              // 检查是否有连线连接到initial_directory输入
+              if (node.inputs) {
+                const initialDirectoryInput = node.inputs.find(
+                  (input) => input.name === 'initial_directory'
+                );
+                if (
+                  initialDirectoryInput &&
+                  initialDirectoryInput.link !== null
+                ) {
+                  // 有连线，从上游节点获取值
+                  const link = app.graph.links[initialDirectoryInput.link];
+                  if (link) {
+                    const upstreamNode = app.graph.getNodeById(link.origin_id);
+
+                    let widgetName = 'value';
+
+                    if (upstreamNode && upstreamNode.widgets) {
+                      if (upstreamNode.type === 'ReiFolderSelector') {
+                        widgetName = 'folder_path';
+                      }
+                      // 假设上游节点有一个名为'value'的widget
+                      const valueWidget = upstreamNode.widgets.find(
+                        (w) => w.name === widgetName
+                      );
+                      if (valueWidget) {
+                        initialPath = valueWidget.value || '';
+                        console.log(
+                          '[ReiFolderSelector] 从连线获取initial_directory:',
+                          initialPath
+                        );
+                      }
+                    }
+                  }
+                } else {
+                  // 没有连线，从widget获取值
+                  initialPath = initialDirectoryWidget?.value || '';
+                  console.log(
+                    '[ReiFolderSelector] 从widget获取initial_directory:',
+                    initialPath
+                  );
+                }
+              }
+
+              const result = await window.ReiFileSelector.selectSystemDirectory(
+                initialPath
+              );
 
               if (result && result.path) {
                 // 更新文本框的值

@@ -17,6 +17,13 @@ class ReiFolderSelector:
                     "placeholder": "点击'选择文件夹'按钮选择文件夹..."
                 }),
             },
+            "optional": {
+                "initial_directory": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "placeholder": "可选：指定文件选择器的起始目录..."
+                }),
+            },
             "hidden": {
                 "unique_id": "UNIQUE_ID"
             }
@@ -27,7 +34,7 @@ class ReiFolderSelector:
     FUNCTION = "get_folder_path"
     CATEGORY = "ReiTools/Test"
     
-    def get_folder_path(self, folder_path, unique_id=None):
+    def get_folder_path(self, folder_path, unique_id=None, **kwargs):
         """
         返回选定的文件夹路径
         如果路径为空，返回当前ComfyUI根目录作为默认值

@@ -69,10 +69,15 @@ export interface FileSelector {
   selectDirectory: (baseDir?: string) => Promise<FileSelectResult>;
   selectModelDirectory: () => Promise<FileSelectResult>;
   selectLoraDirectory: () => Promise<FileSelectResult>;
+  selectSystemDirectory: (initialPath?: string) => Promise<FileSelectResult>;
   selectImage: () => Promise<FileSelectResult>;
   selectTextFile: () => Promise<FileSelectResult>;
   selectPythonFile: () => Promise<FileSelectResult>;
   fetchFileSystemData: (path?: string, showFiles?: boolean) => Promise<any>;
+  fetchSystemFileSystemData: (
+    path?: string,
+    showFiles?: boolean
+  ) => Promise<any>;
 }
 
 // 全局变量类型声明
