@@ -40,7 +40,7 @@ class ReiFileCounter:
     RETURN_TYPES = ("INT", "STRING", "STRING")
     RETURN_NAMES = ("file_count", "available_extensions", "selected_files")
     FUNCTION = "count_files"
-    CATEGORY = "Rei Tools"
+    CATEGORY = "ReiTools/Test"
     
     def count_files(self, directory_path: str, file_extension: str, unique_id=None, **kwargs):
         """
