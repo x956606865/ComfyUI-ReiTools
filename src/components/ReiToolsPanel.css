@@ -337,16 +337,12 @@
   margin-bottom: 0; /* 移除margin，使用grid gap */
   transition: all 0.2s ease;
   position: relative;
-  cursor: grab;
+  cursor: default; /* 改为默认鼠标样式 */
   display: flex;
   flex-direction: column;
   gap: 8px;
   user-select: none;
   min-height: fit-content;
-}
-
-.param-item:active {
-  cursor: grabbing;
 }
 
 /* 移除pointer-events限制，通过JS逻辑控制拖拽 */
@@ -371,11 +367,25 @@
   box-shadow: 0 4px 15px rgba(0, 122, 204, 0.3);
 }
 
+/* 参数项头部布局 */
+.param-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.param-item-title {
+  flex: 1;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
 /* 拖拽手柄样式 */
 .rei-drag-handle {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   color: #666666;
   font-size: 16px;
   line-height: 1;
@@ -384,6 +394,13 @@
   border-radius: 3px;
   transition: all 0.2s ease;
   user-select: none;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
 }
 
 .rei-drag-handle:hover {
@@ -391,8 +408,88 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.param-item:active .rei-drag-handle {
+.rei-drag-handle:active {
   cursor: grabbing;
+}
+
+/* 菜单按钮样式 */
+.param-item-menu {
+  display: flex;
+  align-items: center;
+}
+
+.param-menu-button {
+  background: none;
+  border: none;
+  color: #666666;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+}
+
+.param-menu-button:hover {
+  color: #999999;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.param-menu-button:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 菜单下拉框样式 */
+.param-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  min-width: 140px;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #ffffff;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 0;
+}
+
+.menu-item:hover {
+  background: #404040;
+}
+
+.menu-item.danger {
+  color: #ff6b6b;
+}
+
+.menu-item.danger:hover {
+  background: #ff6b6b;
+  color: #ffffff;
+}
+
+/* 确保菜单容器有相对定位 */
+.param-item-menu {
+  position: relative;
 }
 
 /* 拖拽提示样式 */
@@ -525,6 +622,393 @@
   background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
   color: #00d4ff;
   text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+/* 数字输入容器 */
+.number-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.number-input-container .param-number-input {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* 滑动条容器 */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+/* 滑动条样式 */
+.param-slider {
+  flex: 1;
+  height: 6px;
+  background: #404040;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.param-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #007acc;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.param-slider::-webkit-slider-thumb:hover {
+  background: #0099ff;
+  transform: scale(1.1);
+}
+
+.param-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #007acc;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.param-slider::-moz-range-thumb:hover {
+  background: #0099ff;
+  transform: scale(1.1);
+}
+
+/* 滑动条轨道样式 */
+.param-slider::-webkit-slider-track {
+  background: #404040;
+  border-radius: 3px;
+  height: 6px;
+}
+
+.param-slider::-moz-range-track {
+  background: #404040;
+  border-radius: 3px;
+  height: 6px;
+}
+
+/* 滑动条值显示 */
+.slider-value {
+  min-width: 40px;
+  text-align: right;
+  font-size: 12px;
+  color: #ffffff;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  background: #2a2a2a;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid #404040;
+}
+
+/* 数字配置按钮 */
+.number-config {
+  display: flex;
+  gap: 4px;
+}
+
+.config-toggle,
+.config-settings {
+  background: none;
+  border: none;
+  color: #666666;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+}
+
+.config-toggle:hover,
+.config-settings:hover {
+  color: #999999;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.config-toggle:active,
+.config-settings:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 配置对话框样式 */
+.config-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.config-dialog {
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  min-width: 300px;
+  max-width: 400px;
+  animation: dialogFadeIn 0.2s ease-out;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.config-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #404040;
+}
+
+.config-dialog-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.config-dialog-close {
+  background: none;
+  border: none;
+  color: #999999;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.config-dialog-close:hover {
+  background: #404040;
+  color: #ffffff;
+}
+
+.config-dialog-content {
+  padding: 20px;
+}
+
+.config-form-group {
+  margin-bottom: 16px;
+}
+
+.config-form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #cccccc;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.config-form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.config-form-group input:focus {
+  outline: none;
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.config-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid #404040;
+}
+
+.config-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.config-btn.cancel {
+  background: #404040;
+  color: #cccccc;
+}
+
+.config-btn.cancel:hover {
+  background: #555555;
+  color: #ffffff;
+}
+
+.config-btn.save {
+  background: #007acc;
+  color: #ffffff;
+}
+
+.config-btn.save:hover {
+  background: #0099ff;
+}
+
+/* 文本输入容器样式 */
+.text-input-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.text-input-container .param-text-input,
+.text-input-container .param-textarea {
+  flex: 1;
+  margin-top: 0;
+}
+
+.text-config {
+  display: flex;
+  gap: 4px;
+  margin-top: 0;
+}
+
+.text-config .config-toggle {
+  background: #404040;
+  border: none;
+  color: #cccccc;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+}
+
+.text-config .config-toggle:hover {
+  background: #555555;
+  color: #ffffff;
+}
+
+.text-config .config-toggle:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 配置列表样式 */
+.config-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  background: #1a1a1a;
+}
+
+.config-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: #cccccc;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.config-item:last-child {
+  border-bottom: none;
+}
+
+.config-item:hover {
+  background: #404040;
+  color: #ffffff;
+}
+
+.config-item:active {
+  background: #555555;
+}
+
+/* Combo浏览器样式 */
+.combo-browser {
+  max-width: 600px;
+  max-height: 80vh;
+}
+
+.combo-options-list {
+  max-height: 400px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  padding: 8px;
+}
+
+.combo-option-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  color: #cccccc;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.combo-option-item:hover {
+  background: #404040;
+  color: #ffffff;
+  border-color: #007acc;
+}
+
+.combo-option-item:active {
+  background: #555555;
+  transform: scale(0.98);
 }
 
 /* 下拉选择框样式 */

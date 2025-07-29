@@ -158,7 +158,7 @@ window.comfyUIAPP = app;
   // 导出全局API
   window.ReiToolsLoader = {
     init: initReiTools,
-    version: '1.5.1',
+    version: '1.5.2',
   };
 })();
 app.registerExtension({
@@ -250,7 +250,8 @@ app.registerExtension({
                 `%c[MyPlugin Callback]`,
                 'background: #aa00ff; color: #fff; padding: 2px 5px; border-radius: 3px;',
                 `Primitive value changed on node '${node.title}' to:`,
-                value
+                value,
+                typeof value
               );
               let r;
               if (originalWidgetCallback) {
