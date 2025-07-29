@@ -19,6 +19,35 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isWideLayout, setIsWideLayout] = useState(false);
+  const [menuVisible, setMenuVisible] = useState<number | null>(null);
+  const [numberConfigs, setNumberConfigs] = useState<{
+    [key: string]: {
+      useSlider: boolean;
+      min: number;
+      max: number;
+      step: number;
+      precision?: number;
+    };
+  }>({});
+  const [textConfigs, setTextConfigs] = useState<{
+    [key: string]: {
+      useTextarea: boolean;
+    };
+  }>({});
+  const [configSelectorVisible, setConfigSelectorVisible] = useState(false);
+  const [currentConfigParamForSelector, setCurrentConfigParamForSelector] =
+    useState<any>(null);
+  const [availableConfigs, setAvailableConfigs] = useState<any>({});
+  const [comboBrowserVisible, setComboBrowserVisible] = useState(false);
+  const [currentComboParam, setCurrentComboParam] = useState<any>(null);
+  const [configDialogVisible, setConfigDialogVisible] = useState(false);
+  const [currentConfigParam, setCurrentConfigParam] = useState<any>(null);
+  const [tempConfig, setTempConfig] = useState({
+    min: 0,
+    max: 100,
+    step: 1,
+    precision: 2,
+  });
 
   // 预设管理相关状态
   const [selectedPreset, setSelectedPreset] = useState<any>(null);
@@ -972,13 +1001,9 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
 
   // 拖拽处理函数
   const handleDragStart = (e: React.DragEvent, index: number) => {
-    // 只有在拖拽手柄或者参数项标题区域时才允许拖拽
+    // 只有拖拽手柄才能拖拽
     const target = e.target as HTMLElement;
-    if (
-      target.closest('input') ||
-      target.closest('textarea') ||
-      target.closest('select')
-    ) {
+    if (!target.closest('.rei-drag-handle')) {
       e.preventDefault();
       return;
     }
@@ -1021,24 +1046,15 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
     const newParamsList = [...paramsList];
     const draggedItem = newParamsList[draggedIndex];
 
-    // 计算正确的插入位置
-    let targetIndex = dropIndex;
-
-    // 如果拖拽的元素在目标位置之前，目标位置需要减1
-    if (draggedIndex < dropIndex) {
-      targetIndex = dropIndex - 1;
-    }
-
     // 移除被拖拽的项目
     newParamsList.splice(draggedIndex, 1);
 
-    // 在新位置插入
-    newParamsList.splice(targetIndex, 0, draggedItem);
+    // 直接在新位置插入，不需要复杂的计算
+    newParamsList.splice(dropIndex, 0, draggedItem);
 
     console.log('Drag operation:', {
       from: draggedIndex,
       to: dropIndex,
-      targetIndex,
       itemId: draggedItem.id,
     });
 
@@ -1057,6 +1073,215 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
     setTimeout(() => {
       resetDragState();
     }, 50);
+  };
+
+  // 菜单处理函数
+  const handleMenuClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuVisible(menuVisible === index ? null : index);
+  };
+
+  const handleMenuAction = (action: string, param: any) => {
+    console.log('菜单操作:', action, param);
+    setMenuVisible(null);
+
+    switch (action) {
+      case 'config':
+        // 配置数字参数
+        const configKey = `${param.id}_${param.target_id}_${param.target_slot}`;
+        const currentConfig = numberConfigs[configKey] || {
+          useSlider: false,
+          min: 0,
+          max: 100,
+          step: param.type.toLowerCase() === 'float' ? 0.1 : 1,
+          precision: param.type.toLowerCase() === 'float' ? 2 : 0,
+        };
+        setNumberConfigs((prev) => ({
+          ...prev,
+          [configKey]: {
+            ...currentConfig,
+            useSlider: !currentConfig.useSlider,
+          },
+        }));
+        break;
+      case 'textConfig':
+        // 配置文本参数
+        const textConfigKey = `${param.id}_${param.target_id}_${param.target_slot}`;
+        const currentTextConfig = textConfigs[textConfigKey] || {
+          useTextarea: false,
+        };
+        handleTextConfig(textConfigKey, !currentTextConfig.useTextarea);
+        break;
+      case 'configSelector':
+        // 打开配置选择器
+        openConfigSelector(param);
+        break;
+      case 'comboBrowser':
+        // 打开combo浏览器
+        openComboBrowser(param);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // 数字配置处理函数
+  const handleNumberConfig = (paramKey: string, field: string, value: any) => {
+    setNumberConfigs((prev) => ({
+      ...prev,
+      [paramKey]: {
+        ...(prev[paramKey] || { useSlider: false, min: 0, max: 100, step: 1 }),
+        [field]: value,
+      },
+    }));
+  };
+
+  // 打开配置对话框
+  const openConfigDialog = (param: any) => {
+    const paramKey = `${param.id}_${param.target_id}_${param.target_slot}`;
+    const isFloat = param.type.toLowerCase() === 'float';
+    const currentConfig = numberConfigs[paramKey] || {
+      useSlider: false,
+      min: 0,
+      max: 100,
+      step: isFloat ? 0.1 : 1,
+      precision: isFloat ? 2 : 0,
+    };
+
+    setCurrentConfigParam(param);
+    setTempConfig({
+      min: currentConfig.min,
+      max: currentConfig.max,
+      step: currentConfig.step,
+      precision: currentConfig.precision || (isFloat ? 2 : 0),
+    });
+    setConfigDialogVisible(true);
+  };
+
+  // 保存配置
+  const saveConfig = () => {
+    if (!currentConfigParam) return;
+
+    const paramKey = `${currentConfigParam.id}_${currentConfigParam.target_id}_${currentConfigParam.target_slot}`;
+    const isFloat = currentConfigParam.type.toLowerCase() === 'float';
+    const currentConfig = numberConfigs[paramKey] || {
+      useSlider: false,
+      min: 0,
+      max: 100,
+      step: isFloat ? 0.1 : 1,
+      precision: isFloat ? 2 : 0,
+    };
+
+    setNumberConfigs((prev) => ({
+      ...prev,
+      [paramKey]: {
+        ...currentConfig,
+        min: tempConfig.min,
+        max: tempConfig.max,
+        step: tempConfig.step,
+        precision: tempConfig.precision,
+      },
+    }));
+
+    setConfigDialogVisible(false);
+    setCurrentConfigParam(null);
+  };
+
+  // 取消配置
+  const cancelConfig = () => {
+    setConfigDialogVisible(false);
+    setCurrentConfigParam(null);
+  };
+
+  // 文本配置处理函数
+  const handleTextConfig = (paramKey: string, useTextarea: boolean) => {
+    setTextConfigs((prev) => ({
+      ...prev,
+      [paramKey]: {
+        useTextarea,
+      },
+    }));
+  };
+
+  // 打开配置选择器
+  const openConfigSelector = async (param: any) => {
+    try {
+      // 获取可用的配置列表
+      const response = await fetch('/api/rei/config/get_all');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      setAvailableConfigs(data ?? {});
+      setCurrentConfigParamForSelector(param);
+      setConfigSelectorVisible(true);
+    } catch (error) {
+      console.error('获取配置列表失败:', error);
+      // 如果API不可用，使用默认配置列表
+      setAvailableConfigs({}); // 示例配置
+      setCurrentConfigParamForSelector(param);
+      setConfigSelectorVisible(true);
+    }
+  };
+
+  // 选择配置值
+  const selectConfigValue = async (configKey: string) => {
+    if (!currentConfigParamForSelector) return;
+
+    try {
+      const paramKey = `${currentConfigParamForSelector.id}_${currentConfigParamForSelector.target_id}_${currentConfigParamForSelector.target_slot}`;
+      const data = availableConfigs[configKey];
+      // 更新表单值
+      setFormValues((prev: any) => ({
+        ...prev,
+        [paramKey]: data ?? '',
+      }));
+
+      setConfigSelectorVisible(false);
+      setCurrentConfigParamForSelector(null);
+    } catch (error) {
+      console.error('获取配置值失败:', error);
+      // 如果API不可用，使用示例值
+      setConfigSelectorVisible(false);
+      setCurrentConfigParamForSelector(null);
+    }
+  };
+
+  // 取消配置选择
+  const cancelConfigSelector = () => {
+    setConfigSelectorVisible(false);
+    setCurrentConfigParamForSelector(null);
+  };
+
+  // 打开combo浏览器
+  const openComboBrowser = (param: any) => {
+    setCurrentComboParam(param);
+    setComboBrowserVisible(true);
+  };
+
+  // 选择combo选项
+  const selectComboOption = (option: string) => {
+    if (!currentComboParam) return;
+
+    const paramKey = `${currentComboParam.id}_${currentComboParam.target_id}_${currentComboParam.target_slot}`;
+
+    // 更新表单值
+    setFormValues((prev: any) => ({
+      ...prev,
+      [paramKey]: option,
+    }));
+
+    setComboBrowserVisible(false);
+    setCurrentComboParam(null);
+  };
+
+  // 取消combo浏览器
+  const cancelComboBrowser = () => {
+    setComboBrowserVisible(false);
+    setCurrentComboParam(null);
   };
   // 监听面板尺寸变化
   const handleResize = (size: { width: number; height: number }) => {
@@ -1082,6 +1307,27 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
     loraLoaderNodes,
     refreshParamsList,
   ]);
+
+  // 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (
+        !target.closest('.param-menu-dropdown') &&
+        !target.closest('.param-menu-button')
+      ) {
+        setMenuVisible(null);
+      }
+    };
+
+    if (menuVisible !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuVisible]);
 
   return (
     <FloatingPanel
@@ -1173,77 +1419,301 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                     draggedIndex === index ? 'dragging' : ''
                   } ${dragOverIndex === index ? 'drag-over' : ''}`}
                   key={`${param.id}_${param.target_id}_${param.target_slot}`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDragLeave={(e) => handleDragLeave(e)}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="rei-drag-handle">⋮⋮</div>
-                  {param.title} ({param.name})
-                  {param.type.toLowerCase() === 'text' && (
-                    <input
-                      type="text"
-                      className="param-text-input"
-                      value={
-                        formValues[
-                          `${param.id}_${param.target_id}_${param.target_slot}`
-                        ] || ''
-                      }
-                      onChange={(e) => {
-                        console.log(
-                          '%c [ e ]-1177',
-                          'font-size:13px; background:pink; color:#bf2c9f;',
-                          e.target.value
-                        );
-                        setFormValues({
-                          ...formValues,
-                          [`${param.id}_${param.target_id}_${param.target_slot}`]:
-                            e.target.value,
-                        });
-                      }}
-                    />
-                  )}
+                  <div className="param-item-header">
+                    <div
+                      className="rei-drag-handle"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                    >
+                      ⋮⋮
+                    </div>
+                    <div className="param-item-title">
+                      {param.title} ({param.name})
+                    </div>
+                    <div className="param-item-menu">
+                      <button
+                        className="param-menu-button"
+                        onClick={(e) => handleMenuClick(e, index)}
+                      >
+                        ⋯
+                      </button>
+                      {menuVisible === index && (
+                        <div className="param-menu-dropdown">
+                          {(param.type.toLowerCase() === 'int' ||
+                            param.type.toLowerCase() === 'float') && (
+                            <button
+                              className="menu-item"
+                              onClick={() => handleMenuAction('config', param)}
+                            >
+                              🎚️ 切换滑动条
+                            </button>
+                          )}
+                          {(param.type.toLowerCase() === 'text' ||
+                            param.type.toLowerCase() === 'customtext' ||
+                            param.type.toLowerCase() === 'string') && (
+                            <>
+                              <button
+                                className="menu-item"
+                                onClick={() =>
+                                  handleMenuAction('textConfig', param)
+                                }
+                              >
+                                切换输入框
+                              </button>
+                              <button
+                                className="menu-item"
+                                onClick={() =>
+                                  handleMenuAction('configSelector', param)
+                                }
+                              >
+                                📋 从配置中取值
+                              </button>
+                            </>
+                          )}
+                          {param.type.toLowerCase() === 'combo' && (
+                            <button
+                              className="menu-item"
+                              onClick={() =>
+                                handleMenuAction('comboBrowser', param)
+                              }
+                            >
+                              🔍 浏览选项
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {param.type.toLowerCase() === 'text' &&
+                    (() => {
+                      const paramKey = `${param.id}_${param.target_id}_${param.target_slot}`;
+                      const config = textConfigs[paramKey] || {
+                        useTextarea: false,
+                      };
+
+                      return (
+                        <div className="text-input-container">
+                          {config.useTextarea ? (
+                            <textarea
+                              className="param-textarea"
+                              rows={isWideLayout ? 2 : 3}
+                              value={formValues[paramKey] || ''}
+                              onChange={(e) => {
+                                setFormValues({
+                                  ...formValues,
+                                  [paramKey]: e.target.value,
+                                });
+                              }}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              className="param-text-input"
+                              value={formValues[paramKey] || ''}
+                              onChange={(e) => {
+                                setFormValues({
+                                  ...formValues,
+                                  [paramKey]: e.target.value,
+                                });
+                              }}
+                            />
+                          )}
+                          <div className="text-config">
+                            <button
+                              className="config-toggle"
+                              onClick={() =>
+                                handleMenuAction('textConfig', param)
+                              }
+                              title={
+                                config.useTextarea
+                                  ? '切换到单行输入'
+                                  : '切换到多行输入'
+                              }
+                            >
+                              🔄
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   {(param.type.toLowerCase() === 'string' ||
-                    param.type.toLowerCase() === 'customtext') && (
-                    <textarea
-                      className="param-input"
-                      rows={isWideLayout ? 2 : 3}
-                      value={
-                        formValues[
-                          `${param.id}_${param.target_id}_${param.target_slot}`
-                        ] || ''
-                      }
-                      onChange={(e) => {
-                        setFormValues({
-                          ...formValues,
-                          [`${param.id}_${param.target_id}_${param.target_slot}`]:
-                            e.target.value,
-                        });
-                      }}
-                    />
-                  )}
+                    param.type.toLowerCase() === 'customtext') &&
+                    (() => {
+                      const paramKey = `${param.id}_${param.target_id}_${param.target_slot}`;
+                      const config = textConfigs[paramKey] || {
+                        useTextarea: true,
+                      };
+
+                      return (
+                        <div className="text-input-container">
+                          {config.useTextarea ? (
+                            <textarea
+                              className="param-textarea"
+                              rows={isWideLayout ? 2 : 3}
+                              value={formValues[paramKey] || ''}
+                              onChange={(e) => {
+                                setFormValues({
+                                  ...formValues,
+                                  [paramKey]: e.target.value,
+                                });
+                              }}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              className="param-text-input"
+                              value={formValues[paramKey] || ''}
+                              onChange={(e) => {
+                                setFormValues({
+                                  ...formValues,
+                                  [paramKey]: e.target.value,
+                                });
+                              }}
+                            />
+                          )}
+                          <div className="text-config">
+                            <button
+                              className="config-toggle"
+                              onClick={() =>
+                                handleMenuAction('textConfig', param)
+                              }
+                              title={
+                                config.useTextarea
+                                  ? '切换到单行输入'
+                                  : '切换到多行输入'
+                              }
+                            >
+                              🔄
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   {(param.type.toLowerCase() === 'int' ||
-                    param.type.toLowerCase() === 'float') && (
-                    <input
-                      type="number"
-                      step={param.type.toLowerCase() === 'float' ? '0.01' : '1'}
-                      className="param-number-input"
-                      value={
-                        formValues[
-                          `${param.id}_${param.target_id}_${param.target_slot}`
-                        ] || ''
-                      }
-                      onChange={(e) => {
-                        setFormValues({
-                          ...formValues,
-                          [`${param.id}_${param.target_id}_${param.target_slot}`]:
-                            e.target.value,
-                        });
-                      }}
-                    />
-                  )}
+                    param.type.toLowerCase() === 'float') &&
+                    (() => {
+                      const paramKey = `${param.id}_${param.target_id}_${param.target_slot}`;
+                      const isFloat = param.type.toLowerCase() === 'float';
+                      console.log(
+                        '%c [ param.type.toLowerCase() ]-1430',
+                        'font-size:13px; background:pink; color:#bf2c9f;',
+                        param.type.toLowerCase()
+                      );
+                      const existingConfig = numberConfigs[paramKey];
+
+                      // 如果配置不存在，或者step/precision没有设置，使用默认值
+                      const config = existingConfig
+                        ? {
+                            ...existingConfig,
+                            step:
+                              existingConfig.step !== undefined
+                                ? existingConfig.step
+                                : isFloat
+                                ? 0.1
+                                : 1,
+                            precision:
+                              existingConfig.precision !== undefined
+                                ? existingConfig.precision
+                                : isFloat
+                                ? 2
+                                : 0,
+                          }
+                        : {
+                            useSlider: false,
+                            min: 0,
+                            max: 100,
+                            step: isFloat ? 0.1 : 1,
+                            precision: isFloat ? 2 : 0,
+                          };
+
+                      console.log('Float config debug:', {
+                        paramKey,
+                        isFloat,
+                        existingConfig,
+                        finalConfig: config,
+                      });
+                      const currentValue =
+                        parseFloat(formValues[paramKey] || '0') || 0;
+
+                      return (
+                        <div className="number-input-container">
+                          {config.useSlider ? (
+                            <div className="slider-container">
+                              <input
+                                type="range"
+                                min={config.min}
+                                max={config.max}
+                                step={config.step.toString()}
+                                value={currentValue}
+                                className="param-slider"
+                                onChange={(e) => {
+                                  console.log(
+                                    '%c [ e.target.value ]-1455',
+                                    'font-size:13px; background:pink; color:#bf2c9f;',
+                                    e.target.value,
+                                    typeof e.target.value
+                                  );
+
+                                  setFormValues({
+                                    ...formValues,
+                                    [paramKey]: parseFloat(e.target.value) ?? 0,
+                                  });
+                                }}
+                              />
+                              <div className="slider-value">
+                                {config.precision !== undefined
+                                  ? currentValue.toFixed(config.precision)
+                                  : currentValue}
+                              </div>
+                            </div>
+                          ) : (
+                            <input
+                              type="number"
+                              step={config.step.toString()}
+                              className="param-number-input"
+                              value={formValues[paramKey] || ''}
+                              onChange={(e) => {
+                                setFormValues({
+                                  ...formValues,
+                                  [paramKey]: e.target.value,
+                                });
+                              }}
+                            />
+                          )}
+                          <div className="number-config">
+                            <button
+                              className="config-toggle"
+                              onClick={() => handleMenuAction('config', param)}
+                              title={
+                                config.useSlider
+                                  ? '切换到输入框'
+                                  : '切换到滑动条'
+                              }
+                            >
+                              🔄
+                            </button>
+                            {config.useSlider && (
+                              <button
+                                className="config-settings"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  openConfigDialog(param);
+                                }}
+                                title="配置最大最小值"
+                              >
+                                ⚙️
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   {param.type.toLowerCase() === 'combo' && (
                     <select
                       className="param-select"
@@ -1603,7 +2073,7 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
         {activeTab === 'info' && (
           <div className="info-section">
             <h3>关于 ReiTools</h3>
-            <p>版本：1.5.1</p>
+            <p>版本：1.5.2</p>
             <p>作者：natsurei</p>
             <p>
               这是一个用于 ComfyUI
@@ -1622,6 +2092,170 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
           </div>
         )}
       </div>
+
+      {/* 数字配置对话框 */}
+      {configDialogVisible && (
+        <div className="config-dialog-overlay">
+          <div className="config-dialog">
+            <div className="config-dialog-header">
+              <h3>配置数字参数</h3>
+              <button className="config-dialog-close" onClick={cancelConfig}>
+                ×
+              </button>
+            </div>
+            <div className="config-dialog-content">
+              <div className="config-form-group">
+                <label>最小值:</label>
+                <input
+                  type="number"
+                  value={tempConfig.min}
+                  onChange={(e) =>
+                    setTempConfig((prev) => ({
+                      ...prev,
+                      min: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  step="any"
+                />
+              </div>
+              <div className="config-form-group">
+                <label>最大值:</label>
+                <input
+                  type="number"
+                  value={tempConfig.max}
+                  onChange={(e) =>
+                    setTempConfig((prev) => ({
+                      ...prev,
+                      max: parseFloat(e.target.value) || 100,
+                    }))
+                  }
+                  step="any"
+                />
+              </div>
+              <div className="config-form-group">
+                <label>步进值:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={tempConfig.step}
+                  onChange={(e) =>
+                    setTempConfig((prev) => ({
+                      ...prev,
+                      step: parseFloat(e.target.value) ?? 1,
+                    }))
+                  }
+                  step="any"
+                />
+              </div>
+              {currentConfigParam &&
+                currentConfigParam.type.toLowerCase() === 'float' && (
+                  <div className="config-form-group">
+                    <label>精度 (小数位数):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={tempConfig.precision}
+                      onChange={(e) =>
+                        setTempConfig((prev) => ({
+                          ...prev,
+                          precision: parseInt(e.target.value) || 2,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
+            </div>
+            <div className="config-dialog-actions">
+              <button className="config-btn cancel" onClick={cancelConfig}>
+                取消
+              </button>
+              <button className="config-btn save" onClick={saveConfig}>
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 配置选择器对话框 */}
+      {configSelectorVisible && (
+        <div className="config-dialog-overlay">
+          <div className="config-dialog">
+            <div className="config-dialog-header">
+              <h3>从配置中取值</h3>
+              <button
+                className="config-dialog-close"
+                onClick={cancelConfigSelector}
+              >
+                ×
+              </button>
+            </div>
+            <div className="config-dialog-content">
+              <div className="config-form-group">
+                <label>选择配置:</label>
+                <div className="config-list">
+                  {Object.keys(availableConfigs).map((configKey: string) => (
+                    <button
+                      key={configKey}
+                      className="config-item"
+                      onClick={() => selectConfigValue(configKey)}
+                    >
+                      {configKey}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="config-dialog-actions">
+              <button
+                className="config-btn cancel"
+                onClick={cancelConfigSelector}
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Combo浏览器对话框 */}
+      {comboBrowserVisible && currentComboParam && (
+        <div className="config-dialog-overlay">
+          <div className="config-dialog combo-browser">
+            <div className="config-dialog-header">
+              <h3>浏览选项 - {currentComboParam.title}</h3>
+              <button
+                className="config-dialog-close"
+                onClick={cancelComboBrowser}
+              >
+                ×
+              </button>
+            </div>
+            <div className="config-dialog-content">
+              <div className="combo-options-list">
+                {currentComboParam.comboOptions.map((option: string) => (
+                  <button
+                    key={option}
+                    className="combo-option-item"
+                    onClick={() => selectComboOption(option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="config-dialog-actions">
+              <button
+                className="config-btn cancel"
+                onClick={cancelComboBrowser}
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </FloatingPanel>
   );
 };
