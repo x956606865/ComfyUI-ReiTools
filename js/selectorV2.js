@@ -220,7 +220,7 @@ app.registerExtension({
       })
     );
 
-    ReiCustomSelectorV2.category = 'ReiTool';
+    ReiCustomSelectorV2.category = 'ReiTools';
   },
   afterConfigureGraph() {
     refreshDropdown();
@@ -339,6 +339,6 @@ app.registerExtension({
       })
     );
 
-    ReiCustomSelectorOptionV2.category = 'ReiTool';
+    ReiCustomSelectorOptionV2.category = 'ReiTools';
   },
 });
