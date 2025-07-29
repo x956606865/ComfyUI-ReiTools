@@ -736,23 +736,23 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
               //   'font-size:13px; background:pink; color:#bf2c9f;',
               //   downstreamNode
               // );
-              console.log(
-                '%c [ modelLoaderNodes ]-747',
-                'font-size:13px; background:pink; color:#bf2c9f;',
-                modelLoaderNodes,
-                modelPaths,
-                loraLoaderNodes,
-                loraPaths,
-                downstreamNode.type,
-                (Array.isArray(modelLoaderNodes) &&
-                  Array.isArray(modelPaths) &&
-                  modelPaths?.length > 0 &&
-                  modelLoaderNodes?.includes(downstreamNode.type)) ||
-                  (Array.isArray(loraLoaderNodes) &&
-                    Array.isArray(loraPaths) &&
-                    loraPaths?.length > 0 &&
-                    loraLoaderNodes?.includes(downstreamNode.type))
-              );
+              // console.log(
+              //   '%c [ modelLoaderNodes ]-747',
+              //   'font-size:13px; background:pink; color:#bf2c9f;',
+              //   modelLoaderNodes,
+              //   modelPaths,
+              //   loraLoaderNodes,
+              //   loraPaths,
+              //   downstreamNode.type,
+              //   (Array.isArray(modelLoaderNodes) &&
+              //     Array.isArray(modelPaths) &&
+              //     modelPaths?.length > 0 &&
+              //     modelLoaderNodes?.includes(downstreamNode.type)) ||
+              //     (Array.isArray(loraLoaderNodes) &&
+              //       Array.isArray(loraPaths) &&
+              //       loraPaths?.length > 0 &&
+              //       loraLoaderNodes?.includes(downstreamNode.type))
+              // );
 
               if (
                 Array.isArray(modelLoaderNodes) &&
@@ -919,6 +919,11 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
   useEffect(() => {
     // return;
     Object.entries(formValues).forEach(([key, value]: any) => {
+      console.log(
+        '%c [ value ]-922',
+        'font-size:13px; background:pink; color:#bf2c9f;',
+        value
+      );
       const [id, targetId, targetSlot] = key.split('_');
       const primaryNode = window.comfyUIAPP?.graph?.getNodeById(id);
 
@@ -933,18 +938,31 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
         // );
         // return;
         console.log(
-          '%c [ window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange ]-849',
+          '%c [ window?.ReiToolsUI?.ReiToolsAPI?.stopParamsListCallWidgetCallback ]-849',
           'font-size:13px; background:pink; color:#bf2c9f;',
-          window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange
+          window?.ReiToolsUI?.ReiToolsAPI?.stopParamsListCallWidgetCallback
         );
 
         if (
           valueWidget &&
-          !window?.ReiToolsUI?.ReiToolsAPI?.widgetValueChange
+          !window?.ReiToolsUI?.ReiToolsAPI?.stopParamsListCallWidgetCallback
         ) {
           valueWidget.value = value;
           if (valueWidget.callback) {
-            valueWidget.callback(value, valueWidget, primaryNode);
+            try {
+              window.ReiToolsUI.ReiToolsAPI.stopWidgetCallbackCallParamRefresh =
+                true;
+              valueWidget.callback(value, valueWidget, primaryNode);
+            } catch (e) {
+              console.log(
+                '%c [ e ]-957',
+                'font-size:13px; background:pink; color:#bf2c9f;',
+                e
+              );
+            } finally {
+              window.ReiToolsUI.ReiToolsAPI.stopWidgetCallbackCallParamRefresh =
+                false;
+            }
           }
         }
       }
@@ -1174,6 +1192,11 @@ export const ReiToolsPanel: React.FC<ReiToolsPanelProps> = ({
                         ] || ''
                       }
                       onChange={(e) => {
+                        console.log(
+                          '%c [ e ]-1177',
+                          'font-size:13px; background:pink; color:#bf2c9f;',
+                          e.target.value
+                        );
                         setFormValues({
                           ...formValues,
                           [`${param.id}_${param.target_id}_${param.target_slot}`]:

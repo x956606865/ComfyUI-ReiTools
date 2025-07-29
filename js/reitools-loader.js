@@ -246,12 +246,12 @@ app.registerExtension({
               //     value
               //   );
               // c. 首先，执行我们自己的自定义回调逻辑
-              //   console.log(
-              //     `%c[MyPlugin Callback]`,
-              //     'background: #aa00ff; color: #fff; padding: 2px 5px; border-radius: 3px;',
-              //     `Primitive value changed on node '${node.title}' to:`,
-              //     value
-              //   );
+              console.log(
+                `%c[MyPlugin Callback]`,
+                'background: #aa00ff; color: #fff; padding: 2px 5px; border-radius: 3px;',
+                `Primitive value changed on node '${node.title}' to:`,
+                value
+              );
               let r;
               if (originalWidgetCallback) {
                 r = originalWidgetCallback.apply(widget, [value, widget, node]);
@@ -259,9 +259,11 @@ app.registerExtension({
 
               if (
                 typeof window?.ReiToolsUI?.ReiToolsAPI?.refreshParamsList ===
-                'function'
+                  'function' &&
+                !window.ReiToolsUI.ReiToolsAPI
+                  .stopWidgetCallbackCallParamRefresh
               ) {
-                window.ReiToolsUI.ReiToolsAPI.widgetValueChange = true;
+                window.ReiToolsUI.ReiToolsAPI.stopWidgetCallbackCallParamRefresh = true;
                 try {
                   window.ReiToolsUI.ReiToolsAPI.refreshParamsList(
                     'value widget change'
@@ -270,7 +272,7 @@ app.registerExtension({
                   console.error(e);
                 } finally {
                   setTimeout(() => {
-                    window.ReiToolsUI.ReiToolsAPI.widgetValueChange = false;
+                    window.ReiToolsUI.ReiToolsAPI.stopParamsListCallWidgetCallback = false;
                   }, 200);
                 }
               }
