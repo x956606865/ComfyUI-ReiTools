@@ -591,6 +591,9 @@ async def browse_system_filesystem(request):
             }
             return web.json_response(file_info)
         
+        # 如果是Windows系统的磁盘根目录(如 "C:")，确保加上 "/" 
+        if system == 'windows' and len(target_path) == 2 and target_path[1] == ':':
+            target_path = target_path + '/'
         # 读取目录内容
         items = []
         try:
